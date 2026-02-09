@@ -9,11 +9,6 @@
     },
     "routes": [
         {
-            "route": "/.auth/login/done",
-            "rewrite": "/profile",
-            "statusCode": 302
-        },
-        {
             "route": "/api/*",
             "allowedRoles": [
                 "authenticated"
@@ -42,6 +37,7 @@
         "apiRuntime": "node:20"
     },
     "auth": {
+        "rolesSource": "/api/.auth/me",
         "identityProviders": {
             "google": {
                 "registration": {
