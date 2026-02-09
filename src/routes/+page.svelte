@@ -27,8 +27,8 @@
       <h1>Boat Finder</h1>
       <p>Sydney Tech Diving Availability Coordinator</p>
       <div class="login-buttons">
-        <a href="https://blue-plant-03e9b1700.6.azurestaticapps.net/.auth/login/google" class="login-button">
-          <span>Sign in with Google</span>
+        <a href="/.auth/login/github" class="login-button">
+          <span>Sign in with GitHub</span>
         </a>
       </div>
     </div>
