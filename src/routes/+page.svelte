@@ -30,9 +30,6 @@
         <a href="/.auth/login/google" class="login-button">
           <span>Sign in with Google</span>
         </a>
-        <a href="/.auth/login/aad" class="login-button">
-          <span>Sign in with Microsoft</span>
-        </a>
       </div>
     </div>
   </div>
