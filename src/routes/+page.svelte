@@ -27,7 +27,7 @@
       <h1>Boat Finder</h1>
       <p>Sydney Tech Diving Availability Coordinator</p>
       <div class="login-buttons">
-        <a href="/.auth/login/google?post_login_redirect_uri=/" class="login-button">
+        <a href="/.auth/login/google" class="login-button">
           <span>Sign in with Google</span>
         </a>
       </div>
