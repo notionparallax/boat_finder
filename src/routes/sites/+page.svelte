@@ -27,7 +27,8 @@
     await loadSites();
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e) {
+    e.preventDefault();
     await sitesApi.createSite({
       name: newSite.name,
       depth: parseFloat(newSite.depth),
@@ -55,7 +56,7 @@
     </div>
 
     {#if showAddForm}
-      <form class="add-form" onsubmit|preventDefault={handleSubmit}>
+      <form class="add-form" onsubmit={handleSubmit}>
         <input
           type="text"
           bind:value={newSite.name}

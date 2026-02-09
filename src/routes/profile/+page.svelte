@@ -25,7 +25,8 @@
     }
   });
 
-  async function handleSubmit() {
+  async function handleSubmit(e) {
+    e.preventDefault();
     saving = true;
     try {
       await userApi.updateProfile(profile);
@@ -46,7 +47,7 @@
   <main class="container">
     <h1>Profile</h1>
 
-    <form class="profile-form" onsubmit|preventDefault={handleSubmit}>
+    <form class="profile-form" onsubmit={handleSubmit}>
       <div class="form-section">
         <h2>Personal Information</h2>
         <p class="info-text">
