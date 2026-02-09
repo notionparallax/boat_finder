@@ -11,8 +11,7 @@
     "routes": [
         {
             "route": "/.auth/login/done",
-            "redirect": "/",
-            "statusCode": 302
+            "rewrite": "/.auth/login/done/index.html"
         },
         {
             "route": "/admin/*",
