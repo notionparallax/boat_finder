@@ -21,7 +21,18 @@ app.http('getMe', {
                 .fetchAll();
 
             if (resources.length === 0) {
-                return { status: 404, jsonBody: { error: 'User not found' } };
+                // Create new user on first login
+                const newUser = {
+                    id: authUser.userId,
+                    userId: authUser.userId,
+                    email: authUser.userDetails,
+                    name: authUser.userDetails.split('@')[0],
+                    isOperator: false,
+                    operatorNotificationThreshold: 3
+                };
+                
+                const { resource } = await usersContainer.items.create(newUser);
+                return createResponse(true, resource);
             }
 
             return createResponse(true, resources[0]);
