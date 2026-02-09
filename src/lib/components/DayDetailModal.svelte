@@ -58,6 +58,8 @@
 <div
   class="modal-backdrop"
   onclick={handleBackdropClick}
+  onkeydown={(e) => e.key === 'Escape' && onClose()}
+  role="presentation"
   bind:this={modalElement}
 >
   <div
