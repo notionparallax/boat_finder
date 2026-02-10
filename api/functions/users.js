@@ -30,7 +30,7 @@ app.http('getMe', {
                     isOperator: false,
                     operatorNotificationThreshold: 3
                 };
-                
+
                 const { resource } = await usersContainer.items.create(newUser);
                 return createResponse(true, resource);
             }

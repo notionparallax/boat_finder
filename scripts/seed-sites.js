@@ -1,4 +1,5 @@
-import { CosmosClient } from '@azure/cosmos';
+import admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,18 +7,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read connection string from environment
-const connectionString = process.env.AZURE_COSMOS_CONNECTION_STRING;
+// Initialize Firebase Admin
+admin.initializeApp({
+    projectId: 'boat-finder-sydney',
+});
 
-if (!connectionString) {
-    console.error('Error: AZURE_COSMOS_CONNECTION_STRING environment variable not set');
-    console.log('Usage: AZURE_COSMOS_CONNECTION_STRING="..." node seed-sites.js');
-    process.exit(1);
-}
-
-const client = new CosmosClient(connectionString);
-const database = client.database('BoatFinderDB');
-const container = database.container('DiveSites');
+const db = getFirestore();
 
 async function parseCsv(filePath) {
     const content = fs.readFileSync(filePath, 'utf-8');
@@ -73,16 +68,15 @@ async function parseCsv(filePath) {
         const siteId = crypto.randomUUID();
 
         sites.push({
-            id: siteId,
-            siteId: siteId,
             name: name,
+            nameLower: name.toLowerCase(),
             depth: depth,
             latitude: latitude,
             longitude: longitude,
             type: specificType || generalType || 'wreck',
             description: summary || '',
             createdBy: 'system',
-            createdAt: new Date().toISOString()
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
     }
 
@@ -101,12 +95,10 @@ async function seedSites() {
         console.log(`✅ Parsed ${sites.length} dive sites from CSV\n`);
 
         // Check if sites already exist
-        const { resources: existing } = await container.items
-            .query('SELECT VALUE COUNT(1) FROM c')
-            .fetchAll();
+        const existingSnapshot = await db.collection('diveSites').limit(1).get();
+        const existingCount = existingSnapshot.size;
 
-        const existingCount = existing[0] || 0;
-        console.log(`📊 Current sites in database: ${existingCount}`);
+        console.log(`📊 Current sites in database: ${existingCount > 0 ? 'some exist' : '0'}`);
 
         if (existingCount > 0) {
             console.log('\n⚠️  Sites already exist in database.');
@@ -124,30 +116,36 @@ async function seedSites() {
 
             if (action === 'clear') {
                 console.log('\n🗑️  Clearing existing sites...');
-                const { resources: allSites } = await container.items
-                    .query('SELECT c.id, c.siteId FROM c')
-                    .fetchAll();
-
-                for (const site of allSites) {
-                    await container.item(site.id, site.siteId).delete();
-                }
-                console.log(`✅ Deleted ${allSites.length} existing sites\n`);
+                const allSites = await db.collection('diveSites').get();
+                const batch = db.batch();
+                allSites.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                console.log(`✅ Deleted ${allSites.size} existing sites\n`);
             }
         }
 
-        // Insert sites
-        console.log('💾 Inserting sites into Cosmos DB...');
+        // Insert sites using batch writes (Firestore limit: 500 per batch)
+        console.log('💾 Inserting sites into Firestore...');
         let successCount = 0;
         let errorCount = 0;
 
-        for (const site of sites) {
+        const batchSize = 500;
+        for (let i = 0; i < sites.length; i += batchSize) {
+            const batch = db.batch();
+            const chunk = sites.slice(i, i + batchSize);
+
+            chunk.forEach(site => {
+                const docRef = db.collection('diveSites').doc();
+                batch.set(docRef, site);
+            });
+
             try {
-                await container.items.create(site);
-                successCount++;
+                await batch.commit();
+                successCount += chunk.length;
                 process.stdout.write(`\r  Inserted: ${successCount}/${sites.length}`);
             } catch (error) {
-                errorCount++;
-                console.error(`\n❌ Error inserting ${site.name}:`, error.message);
+                errorCount += chunk.length;
+                console.error(`\n❌ Error inserting batch:`, error.message);
             }
         }
 
