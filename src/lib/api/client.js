@@ -1,4 +1,5 @@
 import { getAuthToken } from '$lib/stores/auth';
+import { logger } from '$lib/utils/logger';
 
 const API_BASE = '/api';
 
@@ -13,7 +14,7 @@ async function apiFetch(endpoint, options = {}) {
     const token = await getAuthToken();
 
     const url = `${API_BASE}${endpoint}`;
-    console.log('API Request:', options.method || 'GET', url);
+    logger.log('API Request:', options.method || 'GET', url);
 
     const response = await fetch(url, {
         ...options,
@@ -24,7 +25,7 @@ async function apiFetch(endpoint, options = {}) {
         }
     });
 
-    console.log('API Response:', response.status, response.statusText);
+    logger.log('API Response:', response.status, response.statusText);
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Request failed' }));
@@ -32,7 +33,7 @@ async function apiFetch(endpoint, options = {}) {
     }
 
     const result = await response.json();
-    console.log('API Result:', result);
+    logger.log('API Result:', result);
     // Extract data from {success: true, data: ...} response format
     return result.data !== undefined ? result.data : result;
 }
@@ -59,7 +60,7 @@ export const availabilityApi = {
 
     async getDayDetails(date, minDepth = null) {
         const query = minDepth ? `?minDepth=${minDepth}` : '';
-        return apiFetch(`/availability/day/${date}${query}`);
+        return apiFetch(`/availability/${date}${query}`);
     },
 
     async toggleAvailability(date) {

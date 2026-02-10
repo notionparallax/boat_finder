@@ -1,4 +1,5 @@
 import { auth } from '$lib/firebase';
+import { logger } from '$lib/utils/logger';
 import { onAuthStateChanged } from 'firebase/auth';
 import { writable } from 'svelte/store';
 
@@ -7,13 +8,13 @@ export const authLoading = writable(true);
 
 // Listen to Firebase auth state changes
 onAuthStateChanged(auth, async (firebaseUser) => {
-    console.log('Auth state changed:', firebaseUser ? `Logged in as ${firebaseUser.email}` : 'Logged out');
+    logger.log('Auth state changed:', firebaseUser ? `Logged in as ${firebaseUser.email}` : 'Logged out');
 
     if (firebaseUser) {
         // User is signed in - fetch full profile from API
         try {
             const token = await firebaseUser.getIdToken();
-            console.log('Fetching user profile from /api/users/me...');
+            logger.log('Fetching user profile from /api/users/me...');
 
             const response = await fetch('/api/users/me', {
                 headers: {
@@ -21,19 +22,19 @@ onAuthStateChanged(auth, async (firebaseUser) => {
                 }
             });
 
-            console.log('API response status:', response.status);
+            logger.log('API response status:', response.status);
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('User profile loaded:', result.data);
+                logger.log('User profile loaded:', result.data);
                 user.set(result.data);
             } else {
                 const errorText = await response.text();
-                console.error('Failed to fetch user profile:', response.status, errorText);
+                logger.error('Failed to fetch user profile:', response.status, errorText);
                 user.set(null);
             }
         } catch (error) {
-            console.error('Error fetching user profile:', error);
+            logger.error('Error fetching user profile:', error);
             user.set(null);
         }
     } else {
