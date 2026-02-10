@@ -23,7 +23,7 @@
 	/* UI colors */
 	--calendar-bg: rgba(255, 255, 255, 0.6);
 	--text-on-calendar: #000000;
-	--text-on-background: #FFFFFF;
+	--text-on-background: #3e3d3d;
 	
 	/* Spacing */
 	--spacing-xs: 0.25rem;

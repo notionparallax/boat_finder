@@ -1,3 +1,5 @@
+import { getAuthToken } from '$lib/stores/auth';
+
 const API_BASE = '/api';
 
 /**
@@ -7,20 +9,32 @@ const API_BASE = '/api';
  * @returns {Promise<any>}
  */
 async function apiFetch(endpoint, options = {}) {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    // Get auth token if user is logged in
+    const token = await getAuthToken();
+
+    const url = `${API_BASE}${endpoint}`;
+    console.log('API Request:', options.method || 'GET', url);
+
+    const response = await fetch(url, {
         ...options,
         headers: {
             'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
             ...options.headers
         }
     });
+
+    console.log('API Response:', response.status, response.statusText);
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Request failed' }));
         throw new Error(error.error || 'Request failed');
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('API Result:', result);
+    // Extract data from {success: true, data: ...} response format
+    return result.data !== undefined ? result.data : result;
 }
 
 // User API
@@ -55,8 +69,8 @@ export const availabilityApi = {
         });
     },
 
-    async getMyDates() {
-        return apiFetch('/availability/my-dates');
+    async getMyDates(startDate, endDate) {
+        return apiFetch(`/availability/my-dates?startDate=${startDate}&endDate=${endDate}`);
     }
 };
 
@@ -84,6 +98,12 @@ export const sitesApi = {
     async toggleInterest(siteId) {
         return apiFetch(`/sites/${siteId}/interest`, {
             method: 'POST'
+        });
+    },
+
+    async deleteSite(siteId) {
+        return apiFetch(`/sites/${siteId}`, {
+            method: 'DELETE'
         });
     }
 };

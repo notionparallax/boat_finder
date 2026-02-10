@@ -2,23 +2,35 @@
   import { userApi } from "$lib/api/client.js";
   import Header from "$lib/components/Header.svelte";
   import { user } from "$lib/stores/auth.js";
+  import { onMount } from "svelte";
 
   let currentUser = $state(null);
   let profile = $state({
+    firstName: "",
+    lastName: "",
     phone: "",
     certLevel: "",
     maxDepth: 0,
+    photoURL: "",
     operatorNotificationThreshold: null,
   });
   let saving = $state(false);
 
-  $effect(() => {
+  onMount(() => {
     currentUser = $user;
+    if (!currentUser) {
+      // No user, redirect to home
+      window.location.href = "/";
+      return;
+    }
     if (currentUser) {
       profile = {
+        firstName: currentUser.firstName || "",
+        lastName: currentUser.lastName || "",
         phone: currentUser.phone || "",
         certLevel: currentUser.certLevel || "",
         maxDepth: currentUser.maxDepth || 0,
+        photoURL: currentUser.photoURL || "",
         operatorNotificationThreshold:
           currentUser.operatorNotificationThreshold || null,
       };
@@ -30,11 +42,11 @@
     saving = true;
     try {
       await userApi.updateProfile(profile);
-      alert("Profile updated successfully!");
+      window.location.href = "/";
     } catch (error) {
       alert("Error updating profile: " + error.message);
+      saving = false;
     }
-    saving = false;
   }
 </script>
 
@@ -45,15 +57,20 @@
 {#if currentUser}
   <Header user={currentUser} />
   <main class="container">
-    <h1>Profile</h1>
-
     <form class="profile-form" onsubmit={handleSubmit}>
       <div class="form-section">
         <h2>Personal Information</h2>
-        <p class="info-text">
-          Name: {currentUser.firstName}
-          {currentUser.lastName}
-        </p>
+
+        <label>
+          First Name
+          <input type="text" bind:value={profile.firstName} required />
+        </label>
+
+        <label>
+          Last Name
+          <input type="text" bind:value={profile.lastName} required />
+        </label>
+
         <p class="info-text">Email: {currentUser.email}</p>
       </div>
 
@@ -119,11 +136,6 @@
     max-width: 800px;
     margin: 0 auto;
     padding: var(--spacing-xl);
-  }
-
-  h1 {
-    font-size: 2rem;
-    margin-bottom: var(--spacing-lg);
   }
 
   .profile-form {

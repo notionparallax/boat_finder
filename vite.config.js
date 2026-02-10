@@ -6,8 +6,9 @@ export default defineConfig({
     server: {
         proxy: {
             '/api': {
-                target: 'http://localhost:7071',
-                changeOrigin: true
+                target: 'https://australia-southeast1-boat-finder-sydney.cloudfunctions.net',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, '/api')
             }
         }
     }

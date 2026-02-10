@@ -1,35 +1,60 @@
 <script>
   import Calendar from "$lib/components/Calendar.svelte";
   import Header from "$lib/components/Header.svelte";
-  import { user } from "$lib/stores/auth.js";
+  import { auth, googleProvider } from "$lib/firebase";
+  import { authLoading, user } from "$lib/stores/auth.js";
+  import { signInWithPopup } from "firebase/auth";
 
   let currentUser = $state(null);
+  let loading = $state(true);
 
   $effect(() => {
     currentUser = $user;
+    loading = $authLoading;
   });
+
+  async function signInWithGoogle() {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      // User will be set automatically by onAuthStateChanged in auth.js
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+      alert("Failed to sign in. Please try again.");
+    }
+  }
 </script>
 
 <svelte:head>
   <title>Boat Finder - Sydney Tech Diving</title>
 </svelte:head>
 
-{#if currentUser}
+{#if loading}
+  <div class="login-container">
+    <div class="login-card">
+      <p>Loading...</p>
+    </div>
+  </div>
+{:else if currentUser}
   <Header user={currentUser} />
-  <main class="container">
-    <h1>Dive Availability Calendar</h1>
-    <p class="subtitle">Click days to indicate when you're available to dive</p>
+  <main class="container full-screen">
+    <div class="calendar-header-section">
+      <!-- <h1>Dive Availability Calendar</h1> -->
+      <p class="subtitle">Click days that you're interested in diving</p>
+    </div>
     <Calendar />
   </main>
 {:else}
   <div class="login-container">
+    <video autoplay muted loop playsinline preload="none" class="bg-video">
+      <source src="/output1.webm" type="video/webm" />
+    </video>
     <div class="login-card">
       <h1>Boat Finder</h1>
-      <p>Sydney Tech Diving Availability Coordinator</p>
+      <!-- <p>Sydney Tech Diving Availability Coordinator</p> -->
       <div class="login-buttons">
-        <a href="/.auth/login/github" class="login-button">
-          <span>Sign in with GitHub</span>
-        </a>
+        <button onclick={signInWithGoogle} class="login-button">
+          <span>Sign in with Google</span>
+        </button>
       </div>
     </div>
   </div>
@@ -37,9 +62,30 @@
 
 <style>
   .container {
-    max-width: 1200px;
     margin: 0 auto;
     padding: var(--spacing-xl);
+  }
+
+  .container.full-screen {
+    width: 100%;
+    height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+  }
+
+  .calendar-header-section {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .container.full-screen h1 {
+    font-size: 1.75rem;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .container.full-screen .subtitle {
+    font-size: 1rem;
+    margin-bottom: 0;
   }
 
   h1 {
@@ -59,25 +105,44 @@
     justify-content: center;
     min-height: 100vh;
     padding: var(--spacing-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    object-fit: cover;
   }
 
   .login-card {
-    background: var(--calendar-bg);
-    color: var(--text-on-calendar);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    color: var(--text-primary);
     padding: var(--spacing-xl);
     border-radius: var(--radius-lg);
     text-align: center;
     max-width: 400px;
     width: 100%;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   .login-card h1 {
-    color: var(--text-on-calendar);
+    color: var(--text-primary);
     margin-bottom: var(--spacing-md);
   }
 
   .login-card p {
-    color: var(--text-on-calendar);
+    color: var(--text-primary);
     margin-bottom: var(--spacing-xl);
   }
 
@@ -89,10 +154,14 @@
 
   .login-button {
     display: block;
+    width: 100%;
     padding: var(--spacing-md);
     background: var(--bg-gradient-start);
     color: white;
+    border: none;
     border-radius: var(--radius-md);
+    font-size: 1rem;
+    cursor: pointer;
     text-decoration: none;
     transition:
       transform 0.2s,
