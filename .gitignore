@@ -21,10 +21,18 @@ credentials.json
 # Node modules
 /node_modules/
 api/node_modules/
+functions/node_modules/
 
 # SvelteKit
 .svelte-kit/
 build/
+
+# Firebase generated files
+functions/lib/
+functions/.runtimeconfig.json
+src/dataconnect-generated/
+public/
+remoteconfig.template.json
 
 # Logs
 *.log
@@ -40,3 +48,6 @@ Thumbs.db
 # IDE
 .vscode/settings.json
 .idea/
+
+*.mp4
+*.webm
