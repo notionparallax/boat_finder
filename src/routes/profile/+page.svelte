@@ -1,38 +1,32 @@
 <script>
+  import { goto } from "$app/navigation";
   import { userApi } from "$lib/api/client.js";
   import Header from "$lib/components/Header.svelte";
   import { user } from "$lib/stores/auth.js";
+  import { toast } from "$lib/stores/toast";
+  import { logger } from "$lib/utils/logger";
   import { onMount } from "svelte";
 
-  let currentUser = $state(null);
   let profile = $state({
     firstName: "",
     lastName: "",
     phone: "",
     certLevel: "",
     maxDepth: 0,
-    photoURL: "",
     operatorNotificationThreshold: null,
   });
   let saving = $state(false);
 
   onMount(() => {
-    currentUser = $user;
-    if (!currentUser) {
-      // No user, redirect to home
-      window.location.href = "/";
-      return;
-    }
-    if (currentUser) {
+    if ($user) {
       profile = {
-        firstName: currentUser.firstName || "",
-        lastName: currentUser.lastName || "",
-        phone: currentUser.phone || "",
-        certLevel: currentUser.certLevel || "",
-        maxDepth: currentUser.maxDepth || 0,
-        photoURL: currentUser.photoURL || "",
+        firstName: $user.firstName || "",
+        lastName: $user.lastName || "",
+        phone: $user.phone || "",
+        certLevel: $user.certLevel || "",
+        maxDepth: $user.maxDepth || 0,
         operatorNotificationThreshold:
-          currentUser.operatorNotificationThreshold || null,
+          $user.operatorNotificationThreshold || null,
       };
     }
   });
@@ -42,9 +36,11 @@
     saving = true;
     try {
       await userApi.updateProfile(profile);
-      window.location.href = "/";
+      toast.success("Profile updated successfully!");
+      goto("/");
     } catch (error) {
-      alert("Error updating profile: " + error.message);
+      logger.error("Error updating profile:", error);
+      toast.error("Error updating profile: " + error.message);
       saving = false;
     }
   }
@@ -54,10 +50,20 @@
   <title>Profile - Boat Finder</title>
 </svelte:head>
 
-{#if currentUser}
-  <Header user={currentUser} />
+{#if $user}
+  <Header user={$user} />
   <main class="container">
     <form class="profile-form" onsubmit={handleSubmit}>
+      {#if !$user.firstName || !$user.lastName}
+        <div class="welcome-message">
+          <h2>Welcome! Please complete your profile</h2>
+          <p>
+            We need your name to display you on the calendar and dive site
+            lists.
+          </p>
+        </div>
+      {/if}
+
       <div class="form-section">
         <h2>Personal Information</h2>
 
@@ -71,7 +77,7 @@
           <input type="text" bind:value={profile.lastName} required />
         </label>
 
-        <p class="info-text">Email: {currentUser.email}</p>
+        <p class="info-text">Email: {$user.email}</p>
       </div>
 
       <div class="form-section">
@@ -104,7 +110,7 @@
         </label>
       </div>
 
-      {#if currentUser.isOperator}
+      {#if $user.isOperator}
         <div class="form-section">
           <h2>Operator Settings</h2>
 
@@ -153,6 +159,25 @@
     font-size: 1.3rem;
     margin-bottom: var(--spacing-md);
     color: var(--text-on-calendar);
+  }
+
+  .welcome-message {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    color: #856404;
+  }
+
+  .welcome-message h2 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: #856404;
+    font-size: 1.2rem;
+  }
+
+  .welcome-message p {
+    margin: 0;
   }
 
   .info-text {

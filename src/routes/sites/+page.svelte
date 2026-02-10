@@ -1,9 +1,12 @@
 <script>
+  import { goto } from "$app/navigation";
   import { sitesApi } from "$lib/api/client.js";
   import DiverPill from "$lib/components/DiverPill.svelte";
   import Header from "$lib/components/Header.svelte";
   import { db } from "$lib/firebase.js";
   import { user } from "$lib/stores/auth.js";
+  import { toast } from "$lib/stores/toast";
+  import { logger } from "$lib/utils/logger";
   import {
     collection,
     deleteDoc,
@@ -16,7 +19,6 @@
   import { MapPin, Trash2 } from "lucide-svelte";
   import { onMount } from "svelte";
 
-  let currentUser = $state(null);
   let sites = $state([]);
   let showAddForm = $state(false);
   let newSite = $state({ name: "", depth: "", latitude: "", longitude: "" });
@@ -24,16 +26,15 @@
   let map;
   let markers = {};
 
-  // Use derived state to load sites when user becomes available
+  // Load sites when user becomes available
   let previousUser = null;
   $effect(() => {
     if ($user && $user !== previousUser) {
       previousUser = $user;
-      currentUser = $user;
       loadSites();
     } else if ($user === null && previousUser !== null) {
       // User logged out, redirect to home
-      window.location.href = "/";
+      goto("/");
     }
   });
 
@@ -168,11 +169,11 @@
     }
 
     try {
-      console.log("Deleting site directly from Firestore:", siteId);
+      logger.log("Deleting site directly from Firestore:", siteId);
 
       // Delete the site document
       await deleteDoc(doc(db, "diveSites", siteId));
-      console.log("Site deleted from Firestore");
+      logger.log("Site deleted from Firestore");
 
       // Delete all interest records for this site
       const interestQuery = query(
@@ -187,16 +188,16 @@
           batch.delete(doc.ref);
         });
         await batch.commit();
-        console.log("Interest records deleted");
+        logger.log("Interest records deleted");
       }
 
       // Reload sites to update the list
-      console.log("Reloading sites after delete...");
+      logger.log("Reloading sites after delete...");
       await loadSites();
-      console.log("Sites reloaded");
+      logger.log("Sites reloaded");
     } catch (error) {
-      console.error("Failed to delete site:", error);
-      alert("Failed to delete site: " + error.message);
+      logger.error("Failed to delete site:", error);
+      toast.error("Failed to delete site: " + error.message);
     }
   }
 
