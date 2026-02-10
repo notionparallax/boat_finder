@@ -1,17 +1,22 @@
 <script>
   import { availabilityApi } from "$lib/api/client.js";
   import { user } from "$lib/stores/auth.js";
+  import { toast } from "$lib/stores/toast";
   import {
     formatDateISO,
     getCalendarDateRange,
     getMonthGrid,
   } from "$lib/utils/dateHelpers.js";
+  import { logger } from "$lib/utils/logger";
+  import { Phone } from "lucide-svelte";
   import { onMount } from "svelte";
   import DayDetailModal from "./DayDetailModal.svelte";
   import DiverPill from "./DiverPill.svelte";
 
   let currentDate = $state(new Date());
-  let monthGrid = $state([]);
+  let monthGrid = $derived(
+    getMonthGrid(currentDate.getFullYear(), currentDate.getMonth())
+  );
   let availabilityData = $state({});
   let myDates = $state(new Set());
   let selectedDate = $state(null);
@@ -57,10 +62,6 @@
     isOperator = $user?.isOperator || false;
   });
 
-  $effect(() => {
-    monthGrid = getMonthGrid(currentDate.getFullYear(), currentDate.getMonth());
-  });
-
   onMount(async () => {
     await loadData();
   });
@@ -91,30 +92,30 @@
 
     const dateStr = formatDateISO(date);
 
-    if (isOperator) {
-      // Open details modal
-      selectedDate = dateStr;
-      showModal = true;
-    } else {
-      // Toggle availability
-      try {
-        const response = await availabilityApi.toggleAvailability(dateStr);
-        console.log("Toggle availability response:", response);
+    // Toggle availability for all users (operators and regular)
+    try {
+      const response = await availabilityApi.toggleAvailability(dateStr);
+      logger.log("Toggle availability response:", response);
 
-        if (myDates.has(dateStr)) {
-          myDates.delete(dateStr);
-        } else {
-          myDates.add(dateStr);
-        }
-        myDates = myDates; // Trigger reactivity
-        await loadData();
-      } catch (error) {
-        console.error("Failed to toggle availability:", error);
-        alert(
-          `Failed to mark availability: ${error.message || "Unknown error"}. Please check the console for details.`
-        );
+      if (myDates.has(dateStr)) {
+        myDates.delete(dateStr);
+      } else {
+        myDates.add(dateStr);
       }
+      myDates = myDates; // Trigger reactivity
+      await loadData();
+    } catch (error) {
+      logger.error("Failed to toggle availability:", error);
+      toast.error(
+        `Failed to mark availability: ${error.message || "Unknown error"}. Please check the console for details.`
+      );
     }
+  }
+
+  function handleOperatorContactClick(date, event) {
+    event.stopPropagation();
+    selectedDate = formatDateISO(date);
+    showModal = true;
   }
 
   function previousMonth() {
@@ -285,6 +286,15 @@
                 <span class="day-number">{day.getDate()}</span>
                 {#if dayData.count > 0}
                   <span class="day-count">({dayData.count})</span>
+                  {#if isOperator}
+                    <button
+                      class="operator-contact-btn mobile"
+                      onclick={(e) => handleOperatorContactClick(day, e)}
+                      title="Contact divers"
+                    >
+                      <Phone size={16} />
+                    </button>
+                  {/if}
                 {/if}
               </div>
               {#if dayData.count > 0}
@@ -324,6 +334,15 @@
                   <span class="day-number">{day.getDate()}</span>
                   {#if dayData.count > 0}
                     <span class="day-count">({dayData.count})</span>
+                    {#if isOperator}
+                      <button
+                        class="operator-contact-btn"
+                        onclick={(e) => handleOperatorContactClick(day, e)}
+                        title="Contact divers"
+                      >
+                        <Phone size={14} />
+                      </button>
+                    {/if}
                     {#each dayData.divers.slice(0, 5) as diver}
                       <DiverPill {diver} />
                     {/each}
@@ -522,6 +541,28 @@
     flex-wrap: wrap;
     gap: 4px;
     align-items: center;
+  }
+
+  .operator-contact-btn {
+    background: var(--bg-gradient-start);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 4px 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+    margin-left: 4px;
+  }
+
+  .operator-contact-btn:hover {
+    opacity: 0.8;
+  }
+
+  .operator-contact-btn.mobile {
+    padding: 6px 8px;
   }
 
   @media (max-width: 768px) {

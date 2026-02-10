@@ -1,5 +1,6 @@
 <script>
   import { availabilityApi } from "$lib/api/client.js";
+  import { toast } from "$lib/stores/toast";
   import { formatDateDisplay } from "$lib/utils/dateHelpers.js";
   import { sortDiversByDepth } from "$lib/utils/depthColors.js";
   import { Phone } from "lucide-svelte";
@@ -34,7 +35,8 @@
   async function loadDivers() {
     loading = true;
     const data = await availabilityApi.getDayDetails(date, minDepth);
-    divers = sortDiversByDepth(data);
+    // API returns { date, divers } - extract the divers array
+    divers = sortDiversByDepth(data.divers || []);
     loading = false;
   }
 
@@ -45,7 +47,7 @@
   function copyPhoneNumbers() {
     const numbers = divers.map((d) => d.phone).join(", ");
     navigator.clipboard.writeText(numbers);
-    alert("Phone numbers copied to clipboard!");
+    toast.success("Phone numbers copied to clipboard!");
   }
 
   function handleBackdropClick(e) {
