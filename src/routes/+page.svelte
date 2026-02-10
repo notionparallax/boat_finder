@@ -1,7 +1,7 @@
 <script>
   import Calendar from "$lib/components/Calendar.svelte";
   import Header from "$lib/components/Header.svelte";
-  import { auth, googleProvider } from "$lib/firebase";
+  import { auth, googleProvider, microsoftProvider } from "$lib/firebase";
   import { authLoading, user } from "$lib/stores/auth.js";
   import { signInWithPopup } from "firebase/auth";
 
@@ -19,6 +19,16 @@
       // User will be set automatically by onAuthStateChanged in auth.js
     } catch (error) {
       console.error("Error signing in with Google:", error);
+      alert("Failed to sign in. Please try again.");
+    }
+  }
+
+  async function signInWithMicrosoft() {
+    try {
+      await signInWithPopup(auth, microsoftProvider);
+      // User will be set automatically by onAuthStateChanged in auth.js
+    } catch (error) {
+      console.error("Error signing in with Microsoft:", error);
       alert("Failed to sign in. Please try again.");
     }
   }
@@ -54,6 +64,9 @@
       <div class="login-buttons">
         <button onclick={signInWithGoogle} class="login-button">
           <span>Sign in with Google</span>
+        </button>
+        <button onclick={signInWithMicrosoft} class="login-button microsoft">
+          <span>Sign in with Microsoft</span>
         </button>
       </div>
     </div>
@@ -166,6 +179,10 @@
     transition:
       transform 0.2s,
       opacity 0.2s;
+  }
+
+  .login-button.microsoft {
+    background: #2f2f2f;
   }
 
   .login-button:hover {
