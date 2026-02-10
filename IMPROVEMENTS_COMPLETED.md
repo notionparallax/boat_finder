@@ -3,40 +3,46 @@
 ## ✅ All 6 Improvements Implemented and Deployed
 
 ### 1. Removed "Profile" Heading
+
 - **Status**: ✅ Completed
 - **Files Changed**: `src/routes/profile/+page.svelte`
 - **Details**: Removed redundant h1 heading from profile page since navigation already indicates the section
 
 ### 2. Added Auth Redirects
+
 - **Status**: ✅ Completed
-- **Files Changed**: 
+- **Files Changed**:
   - `src/lib/components/Header.svelte` - Redirects to home after logout
   - `src/routes/sites/+page.svelte` - Redirects to home if user logs out
   - `src/routes/profile/+page.svelte` - Redirects to home if not authenticated
 - **Details**: Prevents unauthorized access and provides clear navigation after logout
 
 ### 3. Map Max-Height on Smaller Screens
+
 - **Status**: ✅ Completed
 - **Files Changed**: `src/routes/sites/+page.svelte`
 - **Details**: Added `max-height: 50vh` to `.map-container` for better mobile responsiveness
 
 ### 4. Moved "Dive Sites" Header and Add Button to Header Bar
+
 - **Status**: ✅ Completed
-- **Files Changed**: 
+- **Files Changed**:
   - `src/lib/components/Header.svelte` - Added `pageTitle` and `onAddClick` props
   - `src/routes/sites/+page.svelte` - Removed header-section, uses new Header props
 - **Details**: Consolidated page-specific controls into main header, displays "Boat Finder: Dive Sites" with Add button in nav
 - **Benefits**: Saves vertical space, cleaner layout, consistent navigation pattern
 
 ### 5. Fixed Calendar Overflow on Smaller Screens
+
 - **Status**: ✅ Completed
 - **Files Changed**: `src/lib/components/Calendar.svelte`
 - **Details**: Changed calendar container from fixed `height: calc(100vh - 80px)` to `max-height` to prevent scrollbars
 
 ### 6. Mobile Calendar - Week-by-Week View with Stacked Days
+
 - **Status**: ✅ Completed
 - **Files Changed**: `src/lib/components/Calendar.svelte`
-- **Details**: 
+- **Details**:
   - Added viewport detection (768px breakpoint)
   - Week view on mobile showing 7 stacked days instead of month grid
   - Previous/Next buttons navigate by week on mobile, by month on desktop
@@ -52,23 +58,25 @@
 ## Additional Improvements Made
 
 ### 7. Cleaned Up Unused CSS
+
 - Removed obsolete `.header-section`, `h1`, and `.add-button` styles from sites page
 - Removed unused `h1` styles from profile page
 - Improved build performance by eliminating dead code
 
 ## Deployment Status
 
-**Live URL**: https://boat-finder-sydney.web.app
+**Live URL**: <https://boat-finder-sydney.web.app>
 
 All changes have been built and deployed to Firebase Hosting successfully.
 
 ## Known Issues
 
 ### Delete Functionality
+
 - **Status**: ⚠️ Not Persisting
 - **Issue**: Delete API calls succeed but sites remain in Firestore after refresh
 - **Blocker**: Firebase Functions deployment failing with "Container Healthcheck failed" errors
-- **Next Steps**: 
+- **Next Steps**:
   - Wait for Firebase Cloud Run to recover (24+ hours)
   - Investigate Firestore security rules for delete permissions
   - Add enhanced logging to deleteSite function

@@ -11,13 +11,22 @@
 
 <span class="pill" style="background-color: {getDepthColor(diver.maxDepth)}">
   {#if diver.photoURL}
-    <img src={diver.photoURL} alt={diver.firstName} class="avatar" />
+    <img
+      src={diver.photoURL}
+      alt={diver.firstName || diver.email}
+      class="avatar"
+    />
   {:else}
-    <span class="avatar-fallback"
-      >{getInitials(diver.firstName, diver.lastName)}</span
+    <span class="avatar-fallback">
+      {getInitials(diver.firstName, diver.lastName) ||
+        diver.email?.[0]?.toUpperCase() ||
+        "?"}</span
     >
   {/if}
-  <span class="name">{diver.firstName} {diver.lastName?.[0] || ""}</span>
+  <span class="name"
+    >{diver.firstName || diver.email?.split("@")[0] || "Unknown"}
+    {diver.lastName?.[0] || ""}</span
+  >
 </span>
 
 <style>
