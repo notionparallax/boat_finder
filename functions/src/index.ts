@@ -11,7 +11,11 @@ const sites = require("./sites");
 const scheduled = require("./scheduled");
 
 // Export HTTP functions under /api
-exports.api = onRequest({maxInstances: 10}, (req: any, res: any) => {
+exports.api = onRequest({
+  maxInstances: 10,
+  timeoutSeconds: 60,
+  memory: "512MiB"
+}, (req: any, res: any) => {
   // Strip /api prefix from path
   const fullPath = req.path.replace(/^\/api/, '');
   const path = fullPath.split("/").filter((p: string) => p);

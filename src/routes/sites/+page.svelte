@@ -2,9 +2,17 @@
   import { sitesApi } from "$lib/api/client.js";
   import DiverPill from "$lib/components/DiverPill.svelte";
   import Header from "$lib/components/Header.svelte";
-  import { user } from "$lib/stores/auth.js";
   import { db } from "$lib/firebase.js";
-  import { doc, deleteDoc, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
+  import { user } from "$lib/stores/auth.js";
+  import {
+    collection,
+    deleteDoc,
+    doc,
+    getDocs,
+    query,
+    where,
+    writeBatch,
+  } from "firebase/firestore";
   import { MapPin, Trash2 } from "lucide-svelte";
   import { onMount } from "svelte";
 
@@ -36,27 +44,27 @@
         requestAnimationFrame(checkContainer);
         return;
       }
-      
+
       initializeMap();
     };
-    
+
     const initializeMap = async () => {
       try {
         // Dynamically import Leaflet to avoid SSR issues
-        const L = (await import('leaflet')).default;
-        
+        const L = (await import("leaflet")).default;
+
         // Initialize map centered on SS Currajong wreck
         map = L.map(mapContainer).setView([-33.8550833333, 151.2489233333], 12);
-        
+
         // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
         }).addTo(map);
       } catch (error) {
-        console.error('Failed to initialize map:', error);
+        console.error("Failed to initialize map:", error);
       }
     };
-    
+
     checkContainer();
 
     return () => {
@@ -81,7 +89,7 @@
           }
         })
       );
-      
+
       // Update map markers
       if (map) {
         updateMapMarkers();
@@ -92,30 +100,32 @@
   }
 
   async function updateMapMarkers() {
-    const L = (await import('leaflet')).default;
-    
+    const L = (await import("leaflet")).default;
+
     // Clear existing markers
-    Object.values(markers).forEach(marker => marker.remove());
+    Object.values(markers).forEach((marker) => marker.remove());
     markers = {};
 
     // Add markers for sites with coordinates
-    sites.forEach(site => {
+    sites.forEach((site) => {
       if (site.latitude && site.longitude) {
         const marker = L.marker([site.latitude, site.longitude])
           .bindTooltip(site.name, {
             permanent: false,
-            direction: 'top',
-            offset: [0, -20]
+            direction: "top",
+            offset: [0, -20],
           })
-          .bindPopup(`
+          .bindPopup(
+            `
             <div style="min-width: 200px;">
               <strong style="font-size: 1.1em;">${site.name}</strong><br>
               <strong>Depth:</strong> ${site.depth}m<br>
-              ${site.type ? `<strong>Type:</strong> ${site.type}<br>` : ''}
-              ${site.description ? `<strong>Description:</strong> ${site.description}<br>` : ''}
-              ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong>` : '<em>No divers interested yet</em>'}
+              ${site.type ? `<strong>Type:</strong> ${site.type}<br>` : ""}
+              ${site.description ? `<strong>Description:</strong> ${site.description}<br>` : ""}
+              ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong>` : "<em>No divers interested yet</em>"}
             </div>
-          `)
+          `
+          )
           .addTo(map);
         markers[site.siteId] = marker;
       }
@@ -149,37 +159,41 @@
   }
 
   async function deleteSite(siteId, siteName) {
-    if (!confirm(`Are you sure you want to delete "${siteName}"? This cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${siteName}"? This cannot be undone.`
+      )
+    ) {
       return;
     }
 
     try {
-      console.log('Deleting site directly from Firestore:', siteId);
-      
+      console.log("Deleting site directly from Firestore:", siteId);
+
       // Delete the site document
       await deleteDoc(doc(db, "diveSites", siteId));
-      console.log('Site deleted from Firestore');
-      
+      console.log("Site deleted from Firestore");
+
       // Delete all interest records for this site
       const interestQuery = query(
         collection(db, "siteInterest"),
         where("siteId", "==", siteId)
       );
       const interestSnapshot = await getDocs(interestQuery);
-      
+
       if (!interestSnapshot.empty) {
         const batch = writeBatch(db);
-        interestSnapshot.docs.forEach(doc => {
+        interestSnapshot.docs.forEach((doc) => {
           batch.delete(doc.ref);
         });
         await batch.commit();
-        console.log('Interest records deleted');
+        console.log("Interest records deleted");
       }
-      
+
       // Reload sites to update the list
-      console.log('Reloading sites after delete...');
+      console.log("Reloading sites after delete...");
       await loadSites();
-      console.log('Sites reloaded');
+      console.log("Sites reloaded");
     } catch (error) {
       console.error("Failed to delete site:", error);
       alert("Failed to delete site: " + error.message);
@@ -202,11 +216,18 @@
 
 <svelte:head>
   <title>Dive Sites - Boat Finder</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
 </svelte:head>
 
 {#if currentUser}
-  <Header user={currentUser} pageTitle="Dive Sites" onAddClick={() => (showAddForm = !showAddForm)} />
+  <Header
+    user={currentUser}
+    pageTitle="Dive Sites"
+    onAddClick={() => (showAddForm = !showAddForm)}
+  />
   <main class="container">
     {#if showAddForm}
       <form class="add-form" onsubmit={handleSubmit}>
@@ -245,7 +266,7 @@
 
     <div class="sites-grid">
       {#each sites as site}
-        <div 
+        <div
           class="site-card"
           onmouseenter={() => highlightMarker(site.siteId)}
           onmouseleave={() => unhighlightMarker(site.siteId)}

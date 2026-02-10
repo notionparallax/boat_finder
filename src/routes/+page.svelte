@@ -136,7 +136,7 @@
   }
 
   .login-card {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(10px);
     color: var(--text-primary);
     padding: var(--spacing-xl);

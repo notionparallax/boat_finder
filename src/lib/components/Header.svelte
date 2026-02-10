@@ -18,7 +18,9 @@
 <header class="header">
   <div class="header-content">
     <div class="logo-section">
-      <h1 class="logo">Boat Finder{#if pageTitle}: {pageTitle}{/if}</h1>
+      <h1 class="logo">
+        Boat Finder{#if pageTitle}: {pageTitle}{/if}
+      </h1>
     </div>
     <nav>
       {#if onAddClick}
@@ -32,6 +34,13 @@
       <a href="/profile">Profile</a>
       {#if currentUser.isOperator}
         <a href="/admin">Admin</a>
+      {/if}
+      {#if currentUser.photoURL}
+        <img
+          src={currentUser.photoURL}
+          alt={currentUser.displayName || currentUser.email}
+          class="profile-photo"
+        />
       {/if}
       <button onclick={handleLogout} class="logout-button">Logout</button>
     </nav>
@@ -108,6 +117,14 @@
     opacity: 0.8;
   }
 
+  .profile-photo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--text-on-background);
+  }
+
   @media (max-width: 768px) {
     .header-content {
       flex-direction: column;
@@ -117,6 +134,11 @@
     nav {
       gap: var(--spacing-md);
       font-size: 0.9rem;
+    }
+
+    .profile-photo {
+      width: 28px;
+      height: 28px;
     }
   }
 </style>

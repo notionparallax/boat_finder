@@ -186,7 +186,7 @@ exports.deleteSite = onRequest({ region: "australia-southeast1" }, async (req, r
         console.log("Path:", req.path);
         console.log("Params:", req.params);
         console.log("Body:", req.body);
-        
+
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({ error: "Unauthorized" });

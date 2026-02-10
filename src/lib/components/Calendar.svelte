@@ -22,8 +22,8 @@
 
   onMount(() => {
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   });
 
   function checkMobile() {
@@ -97,25 +97,34 @@
       showModal = true;
     } else {
       // Toggle availability
-      await availabilityApi.toggleAvailability(dateStr);
-      if (myDates.has(dateStr)) {
-        myDates.delete(dateStr);
-      } else {
-        myDates.add(dateStr);
+      try {
+        const response = await availabilityApi.toggleAvailability(dateStr);
+        console.log("Toggle availability response:", response);
+
+        if (myDates.has(dateStr)) {
+          myDates.delete(dateStr);
+        } else {
+          myDates.add(dateStr);
+        }
+        myDates = myDates; // Trigger reactivity
+        await loadData();
+      } catch (error) {
+        console.error("Failed to toggle availability:", error);
+        alert(
+          `Failed to mark availability: ${error.message || "Unknown error"}. Please check the console for details.`
+        );
       }
-      myDates = myDates; // Trigger reactivity
-      await loadData();
     }
   }
 
   function previousMonth() {
     const today = new Date();
-    
+
     if (isMobile) {
       // Previous week
       const prevWeek = new Date(currentWeekStart);
       prevWeek.setDate(currentWeekStart.getDate() - 7);
-      
+
       // Only allow if not before today
       if (prevWeek >= getWeekStart(today)) {
         currentWeekStart = prevWeek;
@@ -139,13 +148,13 @@
 
   function canGoPrevious() {
     const today = new Date();
-    
+
     if (isMobile) {
       const prevWeek = new Date(currentWeekStart);
       prevWeek.setDate(currentWeekStart.getDate() - 7);
       return prevWeek >= getWeekStart(today);
     }
-    
+
     const prevMonthDate = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth() - 1
@@ -166,7 +175,7 @@
       // Next week
       const nextWeek = new Date(currentWeekStart);
       nextWeek.setDate(currentWeekStart.getDate() + 7);
-      
+
       // Only allow if within 3 months
       if (nextWeek <= threeMonthsFromNow) {
         currentWeekStart = nextWeek;
@@ -208,7 +217,7 @@
     if (isMobile) {
       const weekEnd = new Date(currentWeekStart);
       weekEnd.setDate(currentWeekStart.getDate() + 6);
-      
+
       return `${currentWeekStart.toLocaleDateString("en-AU", {
         day: "numeric",
         month: "short",
@@ -219,7 +228,7 @@
         timeZone: "Australia/Sydney",
       })}`;
     }
-    
+
     return currentDate.toLocaleDateString("en-AU", {
       month: "long",
       year: "numeric",
@@ -270,7 +279,9 @@
           >
             <div class="mobile-day-header">
               <div class="day-info">
-                <span class="day-name">{day.toLocaleDateString("en-AU", { weekday: "short" })}</span>
+                <span class="day-name"
+                  >{day.toLocaleDateString("en-AU", { weekday: "short" })}</span
+                >
                 <span class="day-number">{day.getDate()}</span>
                 {#if dayData.count > 0}
                   <span class="day-count">({dayData.count})</span>
@@ -282,7 +293,8 @@
                     <DiverPill {diver} />
                   {/each}
                   {#if dayData.divers.length > 5}
-                    <span class="more-divers">+{dayData.divers.length - 5}</span>
+                    <span class="more-divers">+{dayData.divers.length - 5}</span
+                    >
                   {/if}
                 </div>
               {/if}
@@ -316,7 +328,8 @@
                       <DiverPill {diver} />
                     {/each}
                     {#if dayData.divers.length > 5}
-                      <span class="more-divers">+{dayData.divers.length - 5}</span
+                      <span class="more-divers"
+                        >+{dayData.divers.length - 5}</span
                       >
                     {/if}
                   {/if}

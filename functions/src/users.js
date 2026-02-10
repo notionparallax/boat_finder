@@ -45,7 +45,15 @@ exports.getMe = onRequest({ region: "australia-southeast1" }, async (req, res) =
             return res.status(200).json({ success: true, data: newUser });
         }
 
-        return res.status(200).json({ success: true, data: userDoc.data() });
+        // Sync photoURL from auth token on every login
+        const userData = userDoc.data();
+        const authPhotoURL = decodedToken.picture || "";
+        if (userData.photoURL !== authPhotoURL) {
+            await db.collection("users").doc(userId).update({ photoURL: authPhotoURL });
+            userData.photoURL = authPhotoURL;
+        }
+
+        return res.status(200).json({ success: true, data: userData });
     } catch (error) {
         console.error("Error in getMe:", error);
         return res.status(500).json({ success: false, error: error.message });
