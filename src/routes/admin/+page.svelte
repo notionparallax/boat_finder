@@ -4,14 +4,9 @@
   import { user } from "$lib/stores/auth.js";
   import { onMount } from "svelte";
 
-  let currentUser = $state(null);
   let users = $state([]);
   let searchTerm = $state("");
   let filteredUsers = $state([]);
-
-  $effect(() => {
-    currentUser = $user;
-  });
 
   $effect(() => {
     if (searchTerm) {
@@ -47,8 +42,8 @@
   <title>Admin - Boat Finder</title>
 </svelte:head>
 
-{#if currentUser && currentUser.isOperator}
-  <Header user={currentUser} />
+{#if $user && $user.isOperator}
+  <Header user={$user} pageTitle="Admin" />
   <main class="container">
     <h1>Admin Panel</h1>
 
