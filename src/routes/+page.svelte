@@ -7,10 +7,27 @@
 
   let currentUser = $state(null);
   let loading = $state(true);
+  let redirectChecked = $state(false);
 
   $effect(() => {
     currentUser = $user;
     loading = $authLoading;
+  });
+
+  // Check for profile completion once after user loads
+  $effect(() => {
+    if (
+      !redirectChecked &&
+      !loading &&
+      currentUser &&
+      (!currentUser.firstName || !currentUser.lastName)
+    ) {
+      redirectChecked = true;
+      // Use setTimeout to break out of the effect cycle
+      setTimeout(() => {
+        window.location.href = "/profile";
+      }, 0);
+    }
   });
 
   async function signInWithGoogle() {
@@ -44,8 +61,8 @@
       <p>Loading...</p>
     </div>
   </div>
-{:else if currentUser}
-  <Header user={currentUser} />
+{:else if $user}
+  <Header user={$user} />
   <main class="container full-screen">
     <div class="calendar-header-section">
       <!-- <h1>Dive Availability Calendar</h1> -->

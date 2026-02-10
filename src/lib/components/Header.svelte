@@ -1,17 +1,28 @@
 <script>
+  import { goto } from "$app/navigation";
   import { auth } from "$lib/firebase";
+  import { logger } from "$lib/utils/logger";
   import { signOut } from "firebase/auth";
-  import { Plus } from "lucide-svelte";
+  import { Menu, Plus, X } from "lucide-svelte";
 
   let { user: currentUser, pageTitle, onAddClick } = $props();
+  let mobileMenuOpen = $state(false);
 
   async function handleLogout() {
     try {
       await signOut(auth);
-      window.location.href = "/";
+      goto("/");
     } catch (error) {
-      console.error("Error signing out:", error);
+      logger.error("Error signing out:", error);
     }
+  }
+
+  function toggleMobileMenu() {
+    mobileMenuOpen = !mobileMenuOpen;
+  }
+
+  function closeMobileMenu() {
+    mobileMenuOpen = false;
   }
 </script>
 
@@ -22,7 +33,22 @@
         Boat Finder{#if pageTitle}: {pageTitle}{/if}
       </h1>
     </div>
-    <nav>
+
+    <!-- Mobile hamburger button -->
+    <button
+      class="mobile-menu-button"
+      onclick={toggleMobileMenu}
+      aria-label="Menu"
+    >
+      {#if mobileMenuOpen}
+        <X size={24} />
+      {:else}
+        <Menu size={24} />
+      {/if}
+    </button>
+
+    <!-- Desktop navigation -->
+    <nav class="desktop-nav">
       {#if onAddClick}
         <button onclick={onAddClick} class="add-button" title="Add Site">
           <Plus size={20} />
@@ -45,6 +71,56 @@
       <button onclick={handleLogout} class="logout-button">Logout</button>
     </nav>
   </div>
+
+  <!-- Mobile menu overlay -->
+  {#if mobileMenuOpen}
+    <div class="mobile-menu-overlay" onclick={closeMobileMenu}></div>
+    <nav class="mobile-nav">
+      {#if onAddClick}
+        <button
+          onclick={() => {
+            onAddClick();
+            closeMobileMenu();
+          }}
+          class="mobile-nav-item add-button"
+        >
+          <Plus size={20} />
+          <span>Add Site</span>
+        </button>
+      {/if}
+      <a href="/" onclick={closeMobileMenu} class="mobile-nav-item">Calendar</a>
+      <a href="/sites" onclick={closeMobileMenu} class="mobile-nav-item"
+        >Dive Sites</a
+      >
+      <a href="/profile" onclick={closeMobileMenu} class="mobile-nav-item"
+        >Profile</a
+      >
+      {#if currentUser.isOperator}
+        <a href="/admin" onclick={closeMobileMenu} class="mobile-nav-item"
+          >Admin</a
+        >
+      {/if}
+      <button
+        onclick={() => {
+          handleLogout();
+          closeMobileMenu();
+        }}
+        class="mobile-nav-item logout-button"
+      >
+        Logout
+      </button>
+      {#if currentUser.photoURL}
+        <div class="mobile-user-info">
+          <img
+            src={currentUser.photoURL}
+            alt={currentUser.displayName || currentUser.email}
+            class="profile-photo"
+          />
+          <span>{currentUser.firstName || currentUser.email}</span>
+        </div>
+      {/if}
+    </nav>
+  {/if}
 </header>
 
 <style>
@@ -92,29 +168,50 @@
     opacity: 0.9;
   }
 
-  nav {
+  .mobile-menu-button {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-on-background);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+  }
+
+  .desktop-nav {
     display: flex;
     gap: var(--spacing-lg);
     align-items: center;
   }
 
-  nav a,
-  .logout-button {
+  .desktop-nav a,
+  .desktop-nav .logout-button {
     color: var(--text-on-background);
     transition: opacity 0.2s;
+    padding: var(--spacing-sm);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
   }
 
-  .logout-button {
+  .desktop-nav .logout-button {
     background: none;
     border: none;
     font-size: 1rem;
     cursor: pointer;
-    padding: 0;
   }
 
-  nav a:hover,
-  .logout-button:hover {
+  .desktop-nav a:hover,
+  .desktop-nav .logout-button:hover {
     opacity: 0.8;
+  }
+
+  .mobile-menu-overlay {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: none;
   }
 
   .profile-photo {
@@ -127,13 +224,82 @@
 
   @media (max-width: 768px) {
     .header-content {
-      flex-direction: column;
-      gap: var(--spacing-md);
+      flex-direction: row;
+      justify-content: space-between;
     }
 
-    nav {
+    .mobile-menu-button {
+      display: block;
+    }
+
+    .desktop-nav {
+      display: none;
+    }
+
+    .mobile-menu-overlay {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .mobile-nav {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 80vw;
+      background: white;
+      z-index: 1000;
+      padding: var(--spacing-xl);
+      box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
+      overflow-y: auto;
+    }
+
+    .mobile-nav-item {
+      padding: var(--spacing-md);
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border-color);
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      background: none;
+      border: none;
+      font-size: 1rem;
+      text-align: left;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .mobile-nav-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .mobile-nav-item.add-button {
+      background: var(--calendar-bg);
+      color: var(--text-on-calendar);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-md);
+      justify-content: center;
+    }
+
+    .mobile-user-info {
+      display: flex;
+      align-items: center;
       gap: var(--spacing-md);
-      font-size: 0.9rem;
+      padding: var(--spacing-md);
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-primary);
     }
 
     .profile-photo {
