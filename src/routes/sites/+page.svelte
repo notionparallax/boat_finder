@@ -1,30 +1,189 @@
 <script>
   import { sitesApi } from "$lib/api/client.js";
+  import DiverPill from "$lib/components/DiverPill.svelte";
   import Header from "$lib/components/Header.svelte";
   import { user } from "$lib/stores/auth.js";
-  import { MapPin } from "lucide-svelte";
+  import { db } from "$lib/firebase.js";
+  import { doc, deleteDoc, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
+  import { MapPin, Trash2 } from "lucide-svelte";
   import { onMount } from "svelte";
 
   let currentUser = $state(null);
   let sites = $state([]);
   let showAddForm = $state(false);
   let newSite = $state({ name: "", depth: "", latitude: "", longitude: "" });
+  let mapContainer;
+  let map;
+  let markers = {};
 
+  // Use derived state to load sites when user becomes available
+  let previousUser = null;
   $effect(() => {
-    currentUser = $user;
+    if ($user && $user !== previousUser) {
+      previousUser = $user;
+      currentUser = $user;
+      loadSites();
+    } else if ($user === null && previousUser !== null) {
+      // User logged out, redirect to home
+      window.location.href = "/";
+    }
   });
 
   onMount(async () => {
-    await loadSites();
+    // Wait for the map container to be available
+    const checkContainer = () => {
+      if (!mapContainer) {
+        requestAnimationFrame(checkContainer);
+        return;
+      }
+      
+      initializeMap();
+    };
+    
+    const initializeMap = async () => {
+      try {
+        // Dynamically import Leaflet to avoid SSR issues
+        const L = (await import('leaflet')).default;
+        
+        // Initialize map centered on SS Currajong wreck
+        map = L.map(mapContainer).setView([-33.8550833333, 151.2489233333], 12);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+      } catch (error) {
+        console.error('Failed to initialize map:', error);
+      }
+    };
+    
+    checkContainer();
+
+    return () => {
+      if (map) {
+        map.remove();
+      }
+    };
   });
 
   async function loadSites() {
-    sites = await sitesApi.getAll();
+    try {
+      const allSites = await sitesApi.getAll();
+      // Load divers for each site
+      sites = await Promise.all(
+        allSites.map(async (site) => {
+          try {
+            const divers = await sitesApi.getDivers(site.siteId);
+            return { ...site, interestedDivers: divers };
+          } catch (error) {
+            console.error(`Failed to load divers for ${site.name}:`, error);
+            return { ...site, interestedDivers: [] };
+          }
+        })
+      );
+      
+      // Update map markers
+      if (map) {
+        updateMapMarkers();
+      }
+    } catch (error) {
+      console.error("Failed to load sites:", error);
+    }
+  }
+
+  async function updateMapMarkers() {
+    const L = (await import('leaflet')).default;
+    
+    // Clear existing markers
+    Object.values(markers).forEach(marker => marker.remove());
+    markers = {};
+
+    // Add markers for sites with coordinates
+    sites.forEach(site => {
+      if (site.latitude && site.longitude) {
+        const marker = L.marker([site.latitude, site.longitude])
+          .bindTooltip(site.name, {
+            permanent: false,
+            direction: 'top',
+            offset: [0, -20]
+          })
+          .bindPopup(`
+            <div style="min-width: 200px;">
+              <strong style="font-size: 1.1em;">${site.name}</strong><br>
+              <strong>Depth:</strong> ${site.depth}m<br>
+              ${site.type ? `<strong>Type:</strong> ${site.type}<br>` : ''}
+              ${site.description ? `<strong>Description:</strong> ${site.description}<br>` : ''}
+              ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong>` : '<em>No divers interested yet</em>'}
+            </div>
+          `)
+          .addTo(map);
+        markers[site.siteId] = marker;
+      }
+    });
+
+    // Fit map to show all markers
+    const markerArray = Object.values(markers);
+    if (markerArray.length > 0) {
+      const group = L.featureGroup(markerArray);
+      map.fitBounds(group.getBounds().pad(0.1));
+    }
+  }
+
+  function highlightMarker(siteId) {
+    const marker = markers[siteId];
+    if (marker) {
+      marker.openTooltip();
+    }
+  }
+
+  function unhighlightMarker(siteId) {
+    const marker = markers[siteId];
+    if (marker) {
+      marker.closeTooltip();
+    }
   }
 
   async function toggleInterest(siteId) {
     await sitesApi.toggleInterest(siteId);
     await loadSites();
+  }
+
+  async function deleteSite(siteId, siteName) {
+    if (!confirm(`Are you sure you want to delete "${siteName}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      console.log('Deleting site directly from Firestore:', siteId);
+      
+      // Delete the site document
+      await deleteDoc(doc(db, "diveSites", siteId));
+      console.log('Site deleted from Firestore');
+      
+      // Delete all interest records for this site
+      const interestQuery = query(
+        collection(db, "siteInterest"),
+        where("siteId", "==", siteId)
+      );
+      const interestSnapshot = await getDocs(interestQuery);
+      
+      if (!interestSnapshot.empty) {
+        const batch = writeBatch(db);
+        interestSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        console.log('Interest records deleted');
+      }
+      
+      // Reload sites to update the list
+      console.log('Reloading sites after delete...');
+      await loadSites();
+      console.log('Sites reloaded');
+    } catch (error) {
+      console.error("Failed to delete site:", error);
+      alert("Failed to delete site: " + error.message);
+    }
   }
 
   async function handleSubmit(e) {
@@ -43,18 +202,12 @@
 
 <svelte:head>
   <title>Dive Sites - Boat Finder</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
 {#if currentUser}
-  <Header user={currentUser} />
+  <Header user={currentUser} pageTitle="Dive Sites" onAddClick={() => (showAddForm = !showAddForm)} />
   <main class="container">
-    <div class="header-section">
-      <h1>Dive Sites</h1>
-      <button class="add-button" onclick={() => (showAddForm = !showAddForm)}>
-        {showAddForm ? "Cancel" : "+ Add Site"}
-      </button>
-    </div>
-
     {#if showAddForm}
       <form class="add-form" onsubmit={handleSubmit}>
         <input
@@ -87,28 +240,65 @@
       </form>
     {/if}
 
+    <!-- Map Container -->
+    <div class="map-container" bind:this={mapContainer}></div>
+
     <div class="sites-grid">
       {#each sites as site}
-        <div class="site-card">
+        <div 
+          class="site-card"
+          onmouseenter={() => highlightMarker(site.siteId)}
+          onmouseleave={() => unhighlightMarker(site.siteId)}
+        >
           <div class="site-header">
-            <h3>{site.name}</h3>
-            <button
-              class="interest-button"
-              class:interested={site.userInterested}
-              onclick={() => toggleInterest(site.siteId)}
-            >
-              {site.userInterested ? "★" : "☆"}
-            </button>
+            <div>
+              <h3>{site.name}</h3>
+              {#if site.type}
+                <span class="site-type">{site.type}</span>
+              {/if}
+            </div>
+            <div class="site-actions">
+              <button
+                class="interest-button"
+                class:interested={site.isInterested}
+                onclick={() => toggleInterest(site.siteId)}
+                title={site.isInterested
+                  ? "Remove from my interested sites"
+                  : "Add to my interested sites"}
+              >
+                {site.isInterested ? "★" : "☆"}
+              </button>
+              {#if site.createdBy === currentUser?.userId}
+                <button
+                  class="delete-button"
+                  onclick={() => deleteSite(site.siteId, site.name)}
+                  title="Delete this site"
+                >
+                  <Trash2 size={16} />
+                </button>
+              {/if}
+            </div>
           </div>
+
+          {#if site.description}
+            <p class="site-description">{site.description}</p>
+          {/if}
+
           <div class="site-info">
-            <p><strong>Depth:</strong> {site.depth}m</p>
-            <p>
-              <MapPin size={14} />
-              {site.latitude.toFixed(4)}, {site.longitude.toFixed(4)}
-            </p>
-            <p class="interest-count">
-              {site.interestCount} diver{site.interestCount !== 1 ? "s" : ""} interested
-            </p>
+            <p class="depth"><strong>Depth:</strong> {site.depth}m</p>
+            {#if site.latitude && site.longitude}
+              <p class="coordinates">
+                <MapPin size={14} />
+                {site.latitude.toFixed(4)}, {site.longitude.toFixed(4)}
+              </p>
+            {/if}
+            {#if site.interestedDivers && site.interestedDivers.length > 0}
+              <div class="interested-divers">
+                {#each site.interestedDivers as diver}
+                  <DiverPill {diver} />
+                {/each}
+              </div>
+            {/if}
           </div>
         </div>
       {/each}
@@ -118,28 +308,11 @@
 
 <style>
   .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: var(--spacing-xl);
-  }
-
-  .header-section {
+    height: calc(100vh - 60px);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-  }
-
-  h1 {
-    font-size: 2rem;
-  }
-
-  .add-button {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    background: var(--calendar-bg);
-    color: var(--text-on-calendar);
-    border-radius: var(--radius-md);
-    font-weight: 600;
+    flex-direction: column;
+    padding: var(--spacing-xl);
+    overflow: hidden;
   }
 
   .add-form {
@@ -151,6 +324,15 @@
     flex-direction: column;
     gap: var(--spacing-md);
     color: var(--text-on-calendar);
+  }
+
+  .map-container {
+    width: 100%;
+    height: 800px;
+    max-height: 50vh;
+    margin-bottom: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
   }
 
   .add-form input {
@@ -171,13 +353,21 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--spacing-md);
+    flex: 1;
+    overflow-y: auto;
+    align-content: start;
   }
 
   .site-card {
-    background: var(--calendar-bg);
+    background: rgba(255, 255, 255, 0.6);
     padding: var(--spacing-lg);
     border-radius: var(--radius-md);
     color: var(--text-on-calendar);
+    transition: background-color 0.25s ease;
+  }
+
+  .site-card:hover {
+    background: rgba(255, 255, 255, 0.9);
   }
 
   .site-header {
@@ -188,19 +378,89 @@
   }
 
   .site-header h3 {
-    margin: 0;
+    margin: 0 0 var(--spacing-xs) 0;
     font-size: 1.2rem;
+    line-height: 1.3;
+  }
+
+  .site-type {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(74, 155, 155, 0.2);
+    color: var(--bg-gradient-start);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .site-description {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
   }
 
   .interest-button {
-    font-size: 1.5rem;
-    padding: 0;
-    color: rgba(0, 0, 0, 0.3);
-    transition: color 0.2s;
+    font-size: 1.8rem;
+    padding: 4px;
+    color: rgba(255, 255, 255, 0.4);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .interest-button:hover {
+    color: #ffd700;
+    transform: scale(1.1);
   }
 
   .interest-button.interested {
     color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  }
+  .site-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .delete-button {
+    background: transparent;
+    border: none;
+    color: rgba(220, 38, 38, 0.7);
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .delete-button:hover {
+    color: #dc2626;
+    transform: scale(1.1);
+  }
+  .site-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .delete-button {
+    background: transparent;
+    border: none;
+    color: rgba(220, 38, 38, 0.7);
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .delete-button:hover {
+    color: #dc2626;
+    transform: scale(1.1);
   }
 
   .site-info {
@@ -217,9 +477,24 @@
     gap: var(--spacing-xs);
   }
 
+  .depth {
+    font-size: 1rem;
+  }
+
+  .coordinates {
+    opacity: 0.8;
+  }
+
   .interest-count {
     color: var(--bg-gradient-start);
     font-weight: 600;
+    margin-top: var(--spacing-sm);
+  }
+
+  .interested-divers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
     margin-top: var(--spacing-sm);
   }
 </style>
