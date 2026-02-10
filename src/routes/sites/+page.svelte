@@ -223,9 +223,9 @@
   />
 </svelte:head>
 
-{#if currentUser}
+{#if $user}
   <Header
-    user={currentUser}
+    user={$user}
     pageTitle="Dive Sites"
     onAddClick={() => (showAddForm = !showAddForm)}
   />
@@ -290,7 +290,7 @@
               >
                 {site.isInterested ? "★" : "☆"}
               </button>
-              {#if site.createdBy === currentUser?.userId}
+              {#if site.createdBy === $user?.userId}
                 <button
                   class="delete-button"
                   onclick={() => deleteSite(site.siteId, site.name)}
