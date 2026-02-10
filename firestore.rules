@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is accessing their own data
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if user is an operator
+    function isOperator() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isOperator == true;
+    }
+
+    // Helper function to check if data is publicly visible user info
+    function isPublicUserData() {
+      return request.resource.data.keys().hasOnly([
+        'userId', 'firstName', 'lastName', 'photoURL', 'certLevel', 
+        'maxDepth', 'isOperator', 'createdAt', 'updatedAt'
+      ]);
+    }
+    
+    // Users collection - users can read/write their own profile
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && 
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isOperator', 'userId']);
+    }
+    
+    // Availability collection - users can manage their own availability
+    match /availability/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Dive sites - anyone can read, operators can create/update, creators can delete
+    match /diveSites/{siteId} {
+      allow read: if isSignedIn();
+      allow create, update: if isOperator();
+      allow delete: if isSignedIn() && 
+                       resource.data.createdBy == request.auth.uid;
+    }
+    
+    // Site interest - users can manage their own interests
+    match /siteInterest/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
