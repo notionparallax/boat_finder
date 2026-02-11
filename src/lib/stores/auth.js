@@ -50,3 +50,29 @@ export async function getAuthToken() {
     if (!currentUser) return null;
     return await currentUser.getIdToken();
 }
+
+// Helper function to manually refresh user profile
+export async function refreshUserProfile() {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) {
+        user.set(null);
+        return;
+    }
+
+    try {
+        const token = await firebaseUser.getIdToken();
+        const response = await fetch('/api/users/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            logger.log('User profile refreshed:', result.data);
+            user.set(result.data);
+        }
+    } catch (error) {
+        logger.error('Error refreshing user profile:', error);
+    }
+}

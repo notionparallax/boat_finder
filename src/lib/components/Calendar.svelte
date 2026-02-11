@@ -590,10 +590,6 @@
       font-size: 0.9rem;
     }
 
-    .diver-count {
-      font-size: 0.65rem;
-    }
-
     .weekday-headers {
       display: none;
     }

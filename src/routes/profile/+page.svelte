@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import { userApi } from "$lib/api/client.js";
   import Header from "$lib/components/Header.svelte";
-  import { user } from "$lib/stores/auth.js";
+  import { user, refreshUserProfile } from "$lib/stores/auth.js";
   import { toast } from "$lib/stores/toast";
   import { logger } from "$lib/utils/logger";
   import { onMount } from "svelte";
@@ -36,6 +36,10 @@
     saving = true;
     try {
       await userApi.updateProfile(profile);
+      
+      // Refresh user store so home page sees updated profile
+      await refreshUserProfile();
+      
       toast.success("Profile updated successfully!");
       goto("/");
     } catch (error) {
@@ -93,7 +97,7 @@
           <input
             type="text"
             bind:value={profile.certLevel}
-            placeholder="e.g., TDI Extended Range"
+            placeholder="e.g., TDI ANDP"
             required
           />
         </label>
