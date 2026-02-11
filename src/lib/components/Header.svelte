@@ -133,7 +133,7 @@
 <style>
   .header {
     background: rgba(0, 0, 0, 0.2);
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: var(--spacing-xs) var(--spacing-lg);
     color: var(--text-on-background);
   }
 
