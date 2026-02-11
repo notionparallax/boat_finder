@@ -1,21 +1,4 @@
 :root {
-	/* Depth gradient colors - pale blue (30m) to blue-black (100m) */
-	--depth-30: #B3D9FF;
-	--depth-35: #99CCFF;
-	--depth-40: #80BFFF;
-	--depth-45: #66B2FF;
-	--depth-50: #4DA6FF;
-	--depth-55: #3399FF;
-	--depth-60: #1A8CFF;
-	--depth-65: #007FFF;
-	--depth-70: #0073E6;
-	--depth-75: #0066CC;
-	--depth-80: #0059B3;
-	--depth-85: #004D99;
-	--depth-90: #004080;
-	--depth-95: #003366;
-	--depth-100: #00264D;
-	
 	/* Background gradient */
 	--bg-gradient-start: #4A9B9B; /* Saturated greeny-blue */
 	--bg-gradient-end: #0A1A2A; /* Bluey-black */

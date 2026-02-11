@@ -137,6 +137,12 @@
     myDates = myDates; // Trigger reactivity
     availabilityData = availabilityData; // Trigger reactivity
 
+    // Update cache immediately with optimistic data
+    setCachedCalendar({ 
+      availabilityData, 
+      myDates: Array.from(myDates) 
+    });
+
     // Then sync with backend
     try {
       const response = await availabilityApi.toggleAvailability(dateStr);

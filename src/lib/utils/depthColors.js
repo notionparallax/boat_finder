@@ -10,7 +10,7 @@ export function getDepthColor(depth) {
     
     // Define gradient stops
     const stops = [
-        { depth: 10, color: { r: 0, g: 190, b: 240 } },     // rgba(0, 190, 240, 1) - Shallow cyan
+        { depth: 10, color: { r: 190, g: 240, b: 255 } },     // rgba(190, 240, 255, 1) - Shallow cyan
         { depth: 80, color: { r: 20, g: 145, b: 120 } },    // rgba(20, 145, 120, 1) - Mid teal
         { depth: 150, color: { r: 0, g: 20, b: 80 } }       // rgba(0, 20, 80, 1) - Deep navy
     ];
@@ -27,7 +27,7 @@ export function getDepthColor(depth) {
     
     // If somehow not found, use defaults
     if (!lowerStop || !upperStop) {
-        return 'rgba(0, 190, 240, 1)';
+        return 'rgba(190, 240, 255, 1)';
     }
     
     // Interpolate between the two stops
