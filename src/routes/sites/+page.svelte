@@ -25,6 +25,15 @@
   let mapContainer = $state(null);
   let map;
   let markers = {};
+  let mapBounds = $state(null);
+
+  // Filter sites based on map bounds
+  let visibleSites = $derived(
+    sites.filter((site) => {
+      if (!mapBounds || !site.latitude || !site.longitude) return true;
+      return mapBounds.contains([site.latitude, site.longitude]);
+    })
+  );
 
   // Load sites when user becomes available
   let previousUser = null;
@@ -61,6 +70,14 @@
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "© OpenStreetMap contributors",
         }).addTo(map);
+
+        // Update bounds when map moves or zooms
+        map.on("moveend", () => {
+          mapBounds = map.getBounds();
+        });
+
+        // Set initial bounds
+        mapBounds = map.getBounds();
       } catch (error) {
         console.error("Failed to initialize map:", error);
       }
@@ -110,6 +127,10 @@
     // Add markers for sites with coordinates
     sites.forEach((site) => {
       if (site.latitude && site.longitude) {
+        const isInterested = site.interestedDivers?.some(
+          (d) => d.userId === $user?.uid
+        );
+
         const marker = L.marker([site.latitude, site.longitude])
           .bindTooltip(site.name, {
             permanent: false,
@@ -123,7 +144,23 @@
               <strong>Depth:</strong> ${site.depth}m<br>
               ${site.type ? `<strong>Type:</strong> ${site.type}<br>` : ""}
               ${site.description ? `<strong>Description:</strong> ${site.description}<br>` : ""}
-              ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong>` : "<em>No divers interested yet</em>"}
+              ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong><br>` : "<em>No divers interested yet</em><br>"}
+              <button 
+                onclick="window.toggleSiteInterest('${site.siteId}')"
+                style="
+                  margin-top: 8px;
+                  padding: 6px 12px;
+                  background: ${isInterested ? "#dc2626" : "#4A9B9B"};
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-weight: 600;
+                  width: 100%;
+                "
+              >
+                ${isInterested ? "Remove Interest" : "I'm Interested!"}
+              </button>
             </div>
           `
           )
@@ -171,28 +208,51 @@
         (d) => d.userId !== $user?.uid
       );
     } else {
-      // Add current user to the list
+      // Add current user to the list with full profile data
       sites[siteIndex].interestedDivers = [
         ...(site.interestedDivers || []),
-        { userId: $user?.uid, displayName: $user?.displayName || "You" },
+        {
+          userId: $user?.uid,
+          firstName: $user?.firstName,
+          lastName: $user?.lastName,
+          displayName: $user?.displayName || `${$user?.firstName} ${$user?.lastName}`,
+          maxDepth: $user?.maxDepth,
+          photoURL: $user?.photoURL,
+        },
       ];
+    }
+
+    // Update map markers to reflect change
+    if (map) {
+      updateMapMarkers();
     }
 
     // Then sync with backend
     try {
       await sitesApi.toggleInterest(siteId);
-      // Reload to get accurate data from server
-      await loadSites();
+      // Success - optimistic update was correct, no need to reload
     } catch (error) {
       logger.error("Failed to toggle site interest:", error);
 
       // Rollback optimistic update on failure
       sites[siteIndex].interestedDivers = previousDivers;
 
+      // Rollback map markers
+      if (map) {
+        updateMapMarkers();
+      }
+
       toast.error(
         `Failed to update interest: ${error.message || "Unknown error"}. Please try again.`
       );
     }
+  }
+
+  // Expose toggleInterest to window for popup button clicks
+  if (typeof window !== "undefined") {
+    window.toggleSiteInterest = (siteId) => {
+      toggleInterest(siteId);
+    };
   }
 
   async function deleteSite(siteId, siteName) {
@@ -302,7 +362,7 @@
     <div class="map-container" bind:this={mapContainer}></div>
 
     <div class="sites-grid">
-      {#each sites as site}
+      {#each visibleSites as site}
         <div
           class="site-card"
           onmouseenter={() => highlightMarker(site.siteId)}

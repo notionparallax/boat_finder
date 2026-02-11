@@ -106,8 +106,17 @@
       const response = await availabilityApi.toggleAvailability(dateStr);
       logger.log("Toggle availability response:", response);
 
-      // Reload data to get updated counts and other divers
-      await loadData();
+      // Silently update from backend without reloading full calendar
+      // This prevents scroll bounce while keeping data in sync
+      if (response.success && response.data) {
+        const updatedData = response.data;
+        availabilityData[dateStr] = {
+          date: dateStr,
+          divers: updatedData.divers || [],
+          count: updatedData.divers?.length || 0,
+        };
+        availabilityData = availabilityData; // Trigger reactivity
+      }
     } catch (error) {
       logger.error("Failed to toggle availability:", error);
 
@@ -450,6 +459,7 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow: hidden; /* Prevent calendar from overflowing container */
   }
 
   .days-grid {
@@ -458,6 +468,7 @@
     grid-template-rows: repeat(6, 1fr);
     gap: var(--spacing-sm);
     flex: 1;
+    overflow: auto; /* Allow grid to scroll if needed */
   }
 
   .day-cell {

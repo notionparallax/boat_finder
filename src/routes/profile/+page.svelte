@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import { userApi } from "$lib/api/client.js";
   import Header from "$lib/components/Header.svelte";
-  import { user, refreshUserProfile } from "$lib/stores/auth.js";
+  import { refreshUserProfile, user } from "$lib/stores/auth.js";
   import { toast } from "$lib/stores/toast";
   import { logger } from "$lib/utils/logger";
   import { onMount } from "svelte";
@@ -36,10 +36,10 @@
     saving = true;
     try {
       await userApi.updateProfile(profile);
-      
+
       // Refresh user store so home page sees updated profile
       await refreshUserProfile();
-      
+
       toast.success("Profile updated successfully!");
       goto("/");
     } catch (error) {
@@ -97,7 +97,7 @@
           <input
             type="text"
             bind:value={profile.certLevel}
-            placeholder="e.g., TDI ANDP"
+            placeholder="e.g., TDI ANDP, PADI Tec50, etc."
             required
           />
         </label>
@@ -107,10 +107,16 @@
           <input
             type="number"
             bind:value={profile.maxDepth}
-            min="30"
+            min="10"
             max="150"
             required
           />
+          {#if profile.maxDepth > 0 && profile.maxDepth < 30}
+            <span class="depth-warning"
+              >We're so glad you're here, but most of the dives here are going to
+              be deeper than that</span
+            >
+          {/if}
         </label>
       </div>
 
@@ -223,5 +229,14 @@
   .save-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .depth-warning {
+    display: block;
+    margin-top: var(--spacing-xs);
+    color: #d97706;
+    font-size: 0.85rem;
+    font-weight: normal;
+    font-style: italic;
   }
 </style>

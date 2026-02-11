@@ -1,34 +1,44 @@
 /**
  * Get depth color based on max depth certification
+ * Uses 3-stop gradient: shallow cyan → mid teal → deep navy
  * @param {number} depth - Depth in meters
- * @returns {string} CSS color hex code
+ * @returns {string} CSS color (rgba format)
  */
 export function getDepthColor(depth) {
-    const colors = {
-        30: '#B3D9FF',
-        35: '#99CCFF',
-        40: '#80BFFF',
-        45: '#66B2FF',
-        50: '#4DA6FF',
-        55: '#3399FF',
-        60: '#1A8CFF',
-        65: '#007FFF',
-        70: '#0073E6',
-        75: '#0066CC',
-        80: '#0059B3',
-        85: '#004D99',
-        90: '#004080',
-        95: '#003366',
-        100: '#00264D'
-    };
-
-    // Round to nearest 5
-    const roundedDepth = Math.round(depth / 5) * 5;
-
-    // Clamp between 30 and 100
-    const clampedDepth = Math.max(30, Math.min(100, roundedDepth));
-
-    return colors[clampedDepth] || colors[50];
+    // Clamp between 10 and 150 meters
+    const clampedDepth = Math.max(10, Math.min(150, depth));
+    
+    // Define gradient stops
+    const stops = [
+        { depth: 10, color: { r: 0, g: 190, b: 240 } },     // rgba(0, 190, 240, 1) - Shallow cyan
+        { depth: 80, color: { r: 20, g: 145, b: 120 } },    // rgba(20, 145, 120, 1) - Mid teal
+        { depth: 150, color: { r: 0, g: 20, b: 80 } }       // rgba(0, 20, 80, 1) - Deep navy
+    ];
+    
+    // Find which gradient segment we're in
+    let lowerStop, upperStop;
+    for (let i = 0; i < stops.length - 1; i++) {
+        if (clampedDepth >= stops[i].depth && clampedDepth <= stops[i + 1].depth) {
+            lowerStop = stops[i];
+            upperStop = stops[i + 1];
+            break;
+        }
+    }
+    
+    // If somehow not found, use defaults
+    if (!lowerStop || !upperStop) {
+        return 'rgba(0, 190, 240, 1)';
+    }
+    
+    // Interpolate between the two stops
+    const range = upperStop.depth - lowerStop.depth;
+    const position = (clampedDepth - lowerStop.depth) / range;
+    
+    const r = Math.round(lowerStop.color.r + (upperStop.color.r - lowerStop.color.r) * position);
+    const g = Math.round(lowerStop.color.g + (upperStop.color.g - lowerStop.color.g) * position);
+    const b = Math.round(lowerStop.color.b + (upperStop.color.b - lowerStop.color.b) * position);
+    
+    return `rgba(${r}, ${g}, ${b}, 1)`;
 }
 
 /**
