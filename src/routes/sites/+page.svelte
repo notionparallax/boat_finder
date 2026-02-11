@@ -22,7 +22,7 @@
   let sites = $state([]);
   let showAddForm = $state(false);
   let newSite = $state({ name: "", depth: "", latitude: "", longitude: "" });
-  let mapContainer;
+  let mapContainer = $state(null);
   let map;
   let markers = {};
 
@@ -307,6 +307,7 @@
           class="site-card"
           onmouseenter={() => highlightMarker(site.siteId)}
           onmouseleave={() => unhighlightMarker(site.siteId)}
+          role="article"
         >
           <div class="site-header">
             <div>
@@ -541,12 +542,6 @@
 
   .coordinates {
     opacity: 0.8;
-  }
-
-  .interest-count {
-    color: var(--bg-gradient-start);
-    font-weight: 600;
-    margin-top: var(--spacing-sm);
   }
 
   .interested-divers {

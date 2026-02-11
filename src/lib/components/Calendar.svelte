@@ -289,7 +289,10 @@
             class:my-day={isMyDay}
             class:past={isPast}
             onclick={() => !isPast && handleDayClick(day)}
-            onkeydown={(e) => !isPast && (e.key === 'Enter' || e.key === ' ') && handleDayClick(day)}
+            onkeydown={(e) =>
+              !isPast &&
+              (e.key === "Enter" || e.key === " ") &&
+              handleDayClick(day)}
             role="button"
             tabindex={isPast ? -1 : 0}
             aria-disabled={isPast}
@@ -340,7 +343,10 @@
                 class:my-day={isMyDay}
                 class:past={isPast}
                 onclick={() => !isPast && handleDayClick(day)}
-                onkeydown={(e) => !isPast && (e.key === 'Enter' || e.key === ' ') && handleDayClick(day)}
+                onkeydown={(e) =>
+                  !isPast &&
+                  (e.key === "Enter" || e.key === " ") &&
+                  handleDayClick(day)}
                 role="button"
                 tabindex={isPast ? -1 : 0}
                 aria-disabled={isPast}
@@ -509,12 +515,6 @@
     font-size: 1rem;
     color: var(--bg-gradient-start);
     font-weight: 600;
-  }
-
-  .more-divers {
-    font-size: 0.7rem;
-    color: var(--text-on-calendar);
-    opacity: 0.7;
   }
 
   /* Mobile week view styles */

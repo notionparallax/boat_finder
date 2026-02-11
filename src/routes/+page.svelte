@@ -133,7 +133,7 @@
 
   .container.full-screen {
     width: 100%;
-    height: calc(100vh - 60px);
+    min-height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
     padding: var(--spacing-md);
@@ -143,25 +143,9 @@
     margin-bottom: var(--spacing-md);
   }
 
-  .container.full-screen h1 {
-    font-size: 1.75rem;
-    margin-bottom: var(--spacing-xs);
-  }
-
-  .container.full-screen .subtitle {
-    font-size: 1rem;
-    margin-bottom: 0;
-  }
-
   h1 {
     font-size: 2rem;
     margin-bottom: var(--spacing-sm);
-  }
-
-  .subtitle {
-    font-size: 1.1rem;
-    margin-bottom: var(--spacing-xl);
-    opacity: 0.9;
   }
 
   .login-container {

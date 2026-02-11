@@ -74,7 +74,14 @@
 
   <!-- Mobile menu overlay -->
   {#if mobileMenuOpen}
-    <div class="mobile-menu-overlay" onclick={closeMobileMenu}></div>
+    <div
+      class="mobile-menu-overlay"
+      onclick={closeMobileMenu}
+      onkeydown={(e) => e.key === "Escape" && closeMobileMenu()}
+      role="button"
+      tabindex="-1"
+      aria-label="Close menu"
+    ></div>
     <nav class="mobile-nav">
       {#if onAddClick}
         <button
