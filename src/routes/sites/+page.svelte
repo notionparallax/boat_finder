@@ -155,8 +155,44 @@
   }
 
   async function toggleInterest(siteId) {
-    await sitesApi.toggleInterest(siteId);
-    await loadSites();
+    // Optimistic update: Update UI immediately
+    const siteIndex = sites.findIndex((s) => s.siteId === siteId);
+    if (siteIndex === -1) return;
+
+    const site = sites[siteIndex];
+    const wasInterested = site.interestedDivers?.some(
+      (d) => d.userId === $user?.uid
+    );
+    const previousDivers = [...(site.interestedDivers || [])];
+
+    if (wasInterested) {
+      // Remove current user from the list
+      sites[siteIndex].interestedDivers = site.interestedDivers.filter(
+        (d) => d.userId !== $user?.uid
+      );
+    } else {
+      // Add current user to the list
+      sites[siteIndex].interestedDivers = [
+        ...(site.interestedDivers || []),
+        { userId: $user?.uid, displayName: $user?.displayName || "You" },
+      ];
+    }
+
+    // Then sync with backend
+    try {
+      await sitesApi.toggleInterest(siteId);
+      // Reload to get accurate data from server
+      await loadSites();
+    } catch (error) {
+      logger.error("Failed to toggle site interest:", error);
+
+      // Rollback optimistic update on failure
+      sites[siteIndex].interestedDivers = previousDivers;
+
+      toast.error(
+        `Failed to update interest: ${error.message || "Unknown error"}. Please try again.`
+      );
+    }
   }
 
   async function deleteSite(siteId, siteName) {

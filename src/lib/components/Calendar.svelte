@@ -92,22 +92,35 @@
 
     const dateStr = formatDateISO(date);
 
-    // Toggle availability for all users (operators and regular)
+    // Optimistic update: Update UI immediately
+    const wasMyDay = myDates.has(dateStr);
+    if (wasMyDay) {
+      myDates.delete(dateStr);
+    } else {
+      myDates.add(dateStr);
+    }
+    myDates = myDates; // Trigger reactivity
+
+    // Then sync with backend
     try {
       const response = await availabilityApi.toggleAvailability(dateStr);
       logger.log("Toggle availability response:", response);
 
-      if (myDates.has(dateStr)) {
-        myDates.delete(dateStr);
-      } else {
-        myDates.add(dateStr);
-      }
-      myDates = myDates; // Trigger reactivity
+      // Reload data to get updated counts and other divers
       await loadData();
     } catch (error) {
       logger.error("Failed to toggle availability:", error);
+
+      // Rollback optimistic update on failure
+      if (wasMyDay) {
+        myDates.add(dateStr);
+      } else {
+        myDates.delete(dateStr);
+      }
+      myDates = myDates; // Trigger reactivity
+
       toast.error(
-        `Failed to mark availability: ${error.message || "Unknown error"}. Please check the console for details.`
+        `Failed to mark availability: ${error.message || "Unknown error"}. Please try again.`
       );
     }
   }

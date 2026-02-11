@@ -66,9 +66,44 @@
   <main class="container full-screen">
     <div class="calendar-header-section">
       <!-- <h1>Dive Availability Calendar</h1> -->
-      <p class="subtitle">Click days that you're interested in diving</p>
     </div>
     <Calendar />
+    <div class="explainer">
+      <h2>What the hell is going on here?</h2>
+      <p>
+        Click the days that you're interested in diving, that'll add you to the
+        list of people who have a toe in the water for that day. It's not a
+        commitment, just an indication, but take it seriously, or you'll get
+        people's hopes up.
+      </p>
+      <p>
+        The idea is that by finding the days when people are most keen, the
+        people with boats can come to the divers who are excited to get on a
+        boat. This is a very early prototype, so it's not actually connected to
+        any boat operators yet. So have a look around, and send your comments to
+        <a href="mailto:ben@notionparallax.co.uk">Ben Doherty</a> to make changes.
+      </p>
+      <p>
+        This particular page is about showing interest in dates, there's also a
+        page,
+        <em>Dive Sites</em> where you can express interest in a dive site. Maybe if
+        there's enough interest, someone can step up and organise a trip.
+      </p>
+      <h3>How this works</h3>
+      <p>
+        If you go to the <em>Profile</em> page, you can put in your name, and your
+        certification level. This will mean that you show up on the calendar when
+        you click it (no name, no show).
+      </p>
+      <p>
+        Your phone number is in there so that when someone wants to organise a
+        trip, they can start a whatsapp group chat and get a sense of what
+        everyone is up for. Currently, only operators can see phone numbers, but
+        if there's enough demand, I can add a feature to allow divers to see
+        each other's phone numbers as well. This is supposed to be a community
+        project, so it's going to be driven by what that community wants.
+      </p>
+    </div>
   </main>
 {:else}
   <div class="login-container">
@@ -205,5 +240,22 @@
   .login-button:hover {
     transform: translateY(-2px);
     opacity: 0.9;
+  }
+  .explainer {
+    color: black;
+    background: var(--calendar-bg);
+    margin: 1em;
+    padding: 1em;
+    border-radius: 1em;
+    column-width: 25em;
+  }
+  .explainer p {
+    margin-bottom: 0.5em;
+  }
+  .explainer h2 {
+    margin-top: 0;
+  }
+  .explainer h3 {
+    margin-top: 0.5em;
   }
 </style>
