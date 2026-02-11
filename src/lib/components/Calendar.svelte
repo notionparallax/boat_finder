@@ -284,12 +284,15 @@
           {@const isMyDay = myDates.has(dateStr)}
           {@const isPast = day < new Date()}
 
-          <button
+          <div
             class="day-cell mobile-day"
             class:my-day={isMyDay}
             class:past={isPast}
-            onclick={() => handleDayClick(day)}
-            disabled={isPast}
+            onclick={() => !isPast && handleDayClick(day)}
+            onkeydown={(e) => !isPast && (e.key === 'Enter' || e.key === ' ') && handleDayClick(day)}
+            role="button"
+            tabindex={isPast ? -1 : 0}
+            aria-disabled={isPast}
           >
             <div class="mobile-day-header">
               <div class="day-info">
@@ -312,13 +315,13 @@
               </div>
               {#if dayData.count > 0}
                 <div class="divers-list">
-                  {#each dayData.divers.sort((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
+                  {#each dayData.divers.toSorted((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
                     <DiverPill {diver} />
                   {/each}
                 </div>
               {/if}
             </div>
-          </button>
+          </div>
         {/each}
       {:else}
         {#each monthGrid as week}
@@ -332,12 +335,15 @@
               {@const isMyDay = myDates.has(dateStr)}
               {@const isPast = day < new Date()}
 
-              <button
+              <div
                 class="day-cell"
                 class:my-day={isMyDay}
                 class:past={isPast}
-                onclick={() => handleDayClick(day)}
-                disabled={isPast}
+                onclick={() => !isPast && handleDayClick(day)}
+                onkeydown={(e) => !isPast && (e.key === 'Enter' || e.key === ' ') && handleDayClick(day)}
+                role="button"
+                tabindex={isPast ? -1 : 0}
+                aria-disabled={isPast}
               >
                 <div class="day-header">
                   <span class="day-number">{day.getDate()}</span>
@@ -352,12 +358,12 @@
                         <Phone size={14} />
                       </button>
                     {/if}
-                    {#each dayData.divers.sort((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
+                    {#each dayData.divers.toSorted((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
                       <DiverPill {diver} />
                     {/each}
                   {/if}
                 </div>
-              </button>
+              </div>
             {:else}
               <div class="day-cell empty"></div>
             {/if}
@@ -451,6 +457,7 @@
   .day-cell {
     height: 100%;
     min-height: 120px;
+    max-height: 140px;
     padding: var(--spacing-md);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius-sm);
@@ -462,6 +469,7 @@
       transform 0.2s,
       box-shadow 0.2s;
     position: relative;
+    overflow: auto;
   }
 
   .day-cell:not(.empty):not(.past):hover {
