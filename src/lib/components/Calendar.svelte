@@ -312,13 +312,9 @@
               </div>
               {#if dayData.count > 0}
                 <div class="divers-list">
-                  {#each dayData.divers.slice(0, 5) as diver}
+                  {#each dayData.divers.sort((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
                     <DiverPill {diver} />
                   {/each}
-                  {#if dayData.divers.length > 5}
-                    <span class="more-divers">+{dayData.divers.length - 5}</span
-                    >
-                  {/if}
                 </div>
               {/if}
             </div>
@@ -356,14 +352,9 @@
                         <Phone size={14} />
                       </button>
                     {/if}
-                    {#each dayData.divers.slice(0, 5) as diver}
+                    {#each dayData.divers.sort((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
                       <DiverPill {diver} />
                     {/each}
-                    {#if dayData.divers.length > 5}
-                      <span class="more-divers"
-                        >+{dayData.divers.length - 5}</span
-                      >
-                    {/if}
                   {/if}
                 </div>
               </button>
