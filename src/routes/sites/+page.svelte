@@ -5,6 +5,7 @@
   import Header from "$lib/components/Header.svelte";
   import { db } from "$lib/firebase.js";
   import { user } from "$lib/stores/auth.js";
+  import { getCachedSites, setCachedSites, invalidateSitesCache } from "$lib/stores/dataCache.js";
   import { toast } from "$lib/stores/toast";
   import { logger } from "$lib/utils/logger";
   import {
@@ -33,6 +34,15 @@
       if (!mapBounds || !site.latitude || !site.longitude) return true;
       return mapBounds.contains([site.latitude, site.longitude]);
     })
+  );
+
+  // Separate sites with and without coordinates
+  let sitesWithCoords = $derived(
+    visibleSites.filter((site) => site.latitude && site.longitude)
+  );
+  
+  let sitesWithoutCoords = $derived(
+    sites.filter((site) => !site.latitude || !site.longitude)
   );
 
   // Load sites when user becomes available
@@ -94,6 +104,17 @@
 
   async function loadSites() {
     try {
+      // Try to use cached data first
+      const cached = getCachedSites();
+      if (cached) {
+        sites = cached;
+        // Update map markers
+        if (map) {
+          updateMapMarkers();
+        }
+        return;
+      }
+
       const allSites = await sitesApi.getAll();
       // Load divers for each site
       sites = await Promise.all(
@@ -107,6 +128,9 @@
           }
         })
       );
+
+      // Cache the data
+      setCachedSites(sites);
 
       // Update map markers
       if (map) {
@@ -222,25 +246,54 @@
       ];
     }
 
-    // Update map markers to reflect change
-    if (map) {
-      updateMapMarkers();
+    // Update only the specific marker's popup without resetting the view
+    const marker = markers[siteId];
+    if (marker && map) {
+      const site = sites[siteIndex];
+      const isInterested = site.interestedDivers?.some(
+        (d) => d.userId === $user?.uid
+      );
+      
+      marker.setPopupContent(
+        `
+        <div style="min-width: 200px;">
+          <strong style="font-size: 1.1em;">${site.name}</strong><br>
+          <strong>Depth:</strong> ${site.depth}m<br>
+          ${site.type ? `<strong>Type:</strong> ${site.type}<br>` : ""}
+          ${site.description ? `<strong>Description:</strong> ${site.description}<br>` : ""}
+          ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong><br>` : "<em>No divers interested yet</em><br>"}
+          <button 
+            onclick="window.toggleSiteInterest('${site.siteId}')"
+            style="
+              margin-top: 8px;
+              padding: 6px 12px;
+              background: ${isInterested ? "#dc2626" : "#4A9B9B"};
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-weight: 600;
+              width: 100%;
+            "
+          >
+            ${isInterested ? "Remove Interest" : "I'm Interested!"}
+          </button>
+        </div>
+      `
+      );
     }
 
     // Then sync with backend
     try {
       await sitesApi.toggleInterest(siteId);
-      // Success - optimistic update was correct, no need to reload
+      // Success - optimistic update was correct
+      // Invalidate cache so next page load gets fresh data
+      invalidateSitesCache();
     } catch (error) {
       logger.error("Failed to toggle site interest:", error);
 
       // Rollback optimistic update on failure
       sites[siteIndex].interestedDivers = previousDivers;
-
-      // Rollback map markers
-      if (map) {
-        updateMapMarkers();
-      }
 
       toast.error(
         `Failed to update interest: ${error.message || "Unknown error"}. Please try again.`
@@ -362,7 +415,7 @@
     <div class="map-container" bind:this={mapContainer}></div>
 
     <div class="sites-grid">
-      {#each visibleSites as site}
+      {#each sitesWithCoords as site}
         <div
           class="site-card"
           onmouseenter={() => highlightMarker(site.siteId)}
@@ -422,6 +475,67 @@
         </div>
       {/each}
     </div>
+
+    {#if sitesWithoutCoords.length > 0}
+      <h3 class="unknown-location-header">Unknown Location</h3>
+      <div class="sites-grid">
+        {#each sitesWithoutCoords as site}
+          <div
+            class="site-card"
+            role="article"
+          >
+            <div class="site-header">
+              <div>
+                <h3>{site.name}</h3>
+                {#if site.type}
+                  <span class="site-type">{site.type}</span>
+                {/if}
+              </div>
+              <div class="site-actions">
+                <button
+                  class="interest-button"
+                  class:interested={site.isInterested}
+                  onclick={() => toggleInterest(site.siteId)}
+                  title={site.isInterested
+                    ? "Remove from my interested sites"
+                    : "Add to my interested sites"}
+                >
+                  {site.isInterested ? "★" : "☆"}
+                </button>
+                {#if site.createdBy === $user?.userId}
+                  <button
+                    class="delete-button"
+                    onclick={() => deleteSite(site.siteId, site.name)}
+                    title="Delete this site"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                {/if}
+              </div>
+            </div>
+
+            {#if site.description}
+              <p class="site-description">{site.description}</p>
+            {/if}
+
+            <div class="site-info">
+              <p class="depth"><strong>Depth:</strong> {site.depth}m</p>
+            </div>
+
+            {#if site.interestedDivers && site.interestedDivers.length > 0}
+              <div class="interested-divers">
+                <h4>Interested Divers ({site.interestedDivers.length})</h4>
+                <div class="divers-list">
+                  {#each site.interestedDivers as diver}
+                    <DiverPill {diver} />
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    {/if}
   </main>
 {/if}
 
@@ -466,6 +580,13 @@
     color: white;
     border-radius: var(--radius-sm);
     font-weight: 600;
+  }
+
+  .unknown-location-header {
+    margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+    color: var(--text-on-calendar);
+    font-size: 1.3rem;
+    opacity: 0.8;
   }
 
   .sites-grid {

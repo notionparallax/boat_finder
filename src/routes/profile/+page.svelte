@@ -110,13 +110,10 @@
             min="10"
             max="150"
             required
+            title={profile.maxDepth > 0 && profile.maxDepth < 30
+              ? "We're so glad you're here, but most of the dives here are going to be deeper than that"
+              : ""}
           />
-          {#if profile.maxDepth > 0 && profile.maxDepth < 30}
-            <span class="depth-warning"
-              >We're so glad you're here, but most of the dives here are going to
-              be deeper than that</span
-            >
-          {/if}
         </label>
       </div>
 
@@ -229,14 +226,5 @@
   .save-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  .depth-warning {
-    display: block;
-    margin-top: var(--spacing-xs);
-    color: #d97706;
-    font-size: 0.85rem;
-    font-weight: normal;
-    font-style: italic;
   }
 </style>

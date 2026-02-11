@@ -1,6 +1,7 @@
 <script>
   import { availabilityApi } from "$lib/api/client.js";
   import { user } from "$lib/stores/auth.js";
+  import { getCachedCalendar, setCachedCalendar, invalidateCalendarCache } from "$lib/stores/dataCache.js";
   import { toast } from "$lib/stores/toast";
   import {
     formatDateISO,
@@ -67,6 +68,14 @@
   });
 
   async function loadData() {
+    // Try to use cached data first
+    const cached = getCachedCalendar();
+    if (cached) {
+      availabilityData = cached.availabilityData;
+      myDates = new Set(cached.myDates);
+      return;
+    }
+
     // Always fetch 3 months from today
     const { startDate, endDate } = getCalendarDateRange();
     const [calendar, dates] = await Promise.all([
@@ -85,6 +94,9 @@
     }
     availabilityData = dataMap;
     myDates = new Set(dates || []);
+
+    // Cache the data
+    setCachedCalendar({ availabilityData: dataMap, myDates: dates || [] });
   }
 
   async function handleDayClick(date) {
@@ -96,10 +108,34 @@
     const wasMyDay = myDates.has(dateStr);
     if (wasMyDay) {
       myDates.delete(dateStr);
+      // Remove user's pill from availabilityData
+      if (availabilityData[dateStr]) {
+        availabilityData[dateStr].divers = availabilityData[dateStr].divers.filter(
+          (d) => d.userId !== $user?.uid
+        );
+        availabilityData[dateStr].count = availabilityData[dateStr].divers.length;
+      }
     } else {
       myDates.add(dateStr);
+      // Add user's pill to availabilityData
+      if (!availabilityData[dateStr]) {
+        availabilityData[dateStr] = { date: dateStr, divers: [], count: 0 };
+      }
+      availabilityData[dateStr].divers = [
+        ...availabilityData[dateStr].divers,
+        {
+          userId: $user?.uid,
+          firstName: $user?.firstName,
+          lastName: $user?.lastName,
+          displayName: $user?.displayName || `${$user?.firstName} ${$user?.lastName}`,
+          maxDepth: $user?.maxDepth,
+          photoURL: $user?.photoURL,
+        },
+      ];
+      availabilityData[dateStr].count = availabilityData[dateStr].divers.length;
     }
     myDates = myDates; // Trigger reactivity
+    availabilityData = availabilityData; // Trigger reactivity
 
     // Then sync with backend
     try {
@@ -116,6 +152,9 @@
           count: updatedData.divers?.length || 0,
         };
         availabilityData = availabilityData; // Trigger reactivity
+        
+        // Invalidate cache so next page load gets fresh data
+        invalidateCalendarCache();
       }
     } catch (error) {
       logger.error("Failed to toggle availability:", error);
@@ -123,10 +162,32 @@
       // Rollback optimistic update on failure
       if (wasMyDay) {
         myDates.add(dateStr);
+        // Re-add user's pill
+        if (availabilityData[dateStr]) {
+          availabilityData[dateStr].divers = [
+            ...availabilityData[dateStr].divers,
+            {
+              userId: $user?.uid,
+              firstName: $user?.firstName,
+              lastName: $user?.lastName,
+              maxDepth: $user?.maxDepth,
+              photoURL: $user?.photoURL,
+            },
+          ];
+          availabilityData[dateStr].count = availabilityData[dateStr].divers.length;
+        }
       } else {
         myDates.delete(dateStr);
+        // Remove user's pill
+        if (availabilityData[dateStr]) {
+          availabilityData[dateStr].divers = availabilityData[dateStr].divers.filter(
+            (d) => d.userId !== $user?.uid
+          );
+          availabilityData[dateStr].count = availabilityData[dateStr].divers.length;
+        }
       }
       myDates = myDates; // Trigger reactivity
+      availabilityData = availabilityData; // Trigger reactivity
 
       toast.error(
         `Failed to mark availability: ${error.message || "Unknown error"}. Please try again.`
