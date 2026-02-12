@@ -1,229 +1,196 @@
-# Boat Finder - Sydney Tech Diving Availability Coordinator
+# Tech Dive Sydney - Availability Coordinator
 
-A web application that connects technical divers with boat operators in Sydney by flipping the traditional booking paradigm - divers indicate their availability, and operators identify promising days.
+A web application that connects technical divers with boat operators in Sydney by flipping the traditional booking paradigm: divers indicate when they're available, and operators identify promising days to run charters.
 
-## 📋 Project Status
+🌐 **Live Site**: [tech-dive.sydney](https://tech-dive.sydney)
 
-✅ **Frontend**: Complete SvelteKit application with all UI components
-✅ **API Structure**: Azure Functions setup with example endpoints
-✅ **Domain**: tech-dive.sydney purchased and ready for configuration
-✅ **Infrastructure**: Bicep templates ready (see `infrastructure/` folder - to be created)
-⏳ **Deployment**: Requires Azure account setup and DNS configuration
+## 🎯 Purpose
 
-## 🚀 Quick Start
+Traditional boat charter booking is frustrating for tech divers:
+- You call an operator to see if they have a trip
+- If they do, you need to convince other divers to commit
+- If they don't, you start over with another operator
+
+This app flips it around:
+- Divers mark their available days in a shared calendar
+- Operators see when there's critical mass (enough interested divers)
+- Operators contact divers to organize the charter
+
+## ✨ Features
+
+- **Shared Availability Calendar** - Divers mark which days they're available
+- **Diver Profiles** - Show certification level and max depth
+- **Depth-Coded Pills** - Visual indication of diver depth ratings (shallow → deep)
+- **Dive Site Database** - Browse Sydney's technical dive sites with Leaflet maps
+- **Operator Tools** - Contact buttons to reach out to available divers
+- **Mobile Optimized** - Week view for mobile, full month view on desktop
+- **Authentication** - Google and Microsoft OAuth via Firebase
+
+## 🛠️ Tech Stack
+
+- **Frontend**: SvelteKit 2 + Vite
+- **Backend**: Firebase (Firestore + Auth + Hosting + Functions)
+- **Maps**: Leaflet + OpenStreetMap
+- **Styling**: Custom CSS with design system tokens
+- **Deployment**: GitHub Actions → Firebase Hosting
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
 - Node.js 20+
-- Azure account
-- Domain: **tech-dive.sydney** (purchased, ready for DNS configuration)
+- Firebase CLI: `npm install -g firebase-tools` (optional, for local emulation)
 
 ### Local Development
 
-1. **Install dependencies:**
-
-```powershell
+1. **Clone and install:**
+```bash
+git clone https://github.com/notionparallax/boat_finder.git
+cd boat_finder
 npm install
-cd api
-npm install
-cd ..
 ```
 
-1. **Start the frontend:**
-
-```powershell
+2. **Start development server:**
+```bash
 npm run dev
 ```
 
-1. **Start the API (separate terminal):**
+3. **Access the app:**
+- Frontend: http://localhost:5173
 
-```powershell
-cd api
-npm start
+The app connects to the production Firebase backend for authentication and data.
+
+### Firebase Emulator (Optional)
+
+To run with local Firebase emulators:
+
+```bash
+firebase emulators:start
 ```
 
-1. **Access the app:**
+This starts:
+- Firestore emulator on port 8080
+- Auth emulator on port 9099
+- Functions emulator on port 5001
 
-- Frontend: <http://localhost:5173>
-- API: <http://localhost:7071>
-
-## 🏗️ Project Structure
+## 📁 Project Structure
 
 ```
-boat-finder/
-├── src/                          # SvelteKit frontend
-│   ├── routes/                   # Pages
-│   │   ├── +page.svelte         # Calendar view
-│   │   ├── sites/               # Dive sites
-│   │   ├── profile/             # User profile
-│   │   └── admin/               # Admin panel
+boat_finder/
+├── src/
+│   ├── routes/              # SvelteKit pages
+│   │   ├── +page.svelte    # Home - availability calendar
+│   │   ├── profile/        # User profile management
+│   │   └── sites/          # Dive site browser
 │   ├── lib/
-│   │   ├── components/          # Svelte components
-│   │   ├── api/                 # API client
-│   │   ├── stores/              # Svelte stores
-│   │   └── utils/               # Helper functions
-│   └── app.css                  # Global styles
-├── api/                         # Azure Functions
-│   ├── src/
-│   │   ├── functions/           # Function handlers
-│   │   └── utils/               # Shared utilities
-│   └── package.json
-├── infrastructure/              # Bicep IaC (to be created)
-├── .github/workflows/           # CI/CD (to be created)
-└── staticwebapp.config.json     # Azure Static Web App config
+│   │   ├── components/     # Reusable components
+│   │   │   ├── Calendar.svelte
+│   │   │   ├── DiverPill.svelte
+│   │   │   └── DayDetailModal.svelte
+│   │   ├── api/            # Firestore API client
+│   │   ├── stores/         # Svelte stores (auth, data cache)
+│   │   └── utils/          # Date helpers, colors, logging
+│   ├── app.css             # Global styles + design tokens
+│   └── firebase.js         # Firebase config
+├── functions/              # Firebase Cloud Functions
+├── firestore.rules         # Firestore security rules
+├── static/                 # Static assets
+└── firebase.json           # Firebase config
 ```
 
-## 🎨 Features
+## 🎨 Design System
 
-### For Divers
+The app uses a consistent design system with CSS custom properties:
 
-- Toggle availability on calendar days
-- View other divers' interest (anonymized)
-- Express interest in dive sites
-- Color-coded pills by depth certification (30m pale blue → 100m blue-black)
+- **Spacing**: 4px base unit (`--spacing-2xs` through `--spacing-xl`)
+- **Colors**: 
+  - Depth gradient: Shallow cyan → Mid teal → Deep navy
+  - Safety orange (`#FF6B35`) for operator actions (dive industry standard)
+  - Navy-tinted borders with subtle opacity
+- **Typography**: System fonts with proper hierarchy
+- **Accessibility**: WCAG 2.1 Level AA compliant
 
-### For Operators
+## 🔐 Security
 
-- View detailed diver information (name, phone, cert, depth)
-- Filter by minimum depth certification
-- Tap-to-call on mobile
-- Daily email digest of promising days
-- See site interest analytics
+- Firebase API keys in code are **safe to expose** - security is enforced by Firestore rules
+- All user data requires authentication
+- Firestore rules ensure users can only edit their own profiles
+- Operator status managed server-side
 
-### For Admin
+## 🚢 Deployment
 
-- Promote users to operator role
-- View all users
-- Receive new user notifications
+Automatic deployment via GitHub Actions on push to `main`:
 
-## 🔧 Configuration
-
-### Environment Variables
-
-Create `.env` file in project root:
-
-```
-# Not needed for local development - use staticwebapp.config.json
+```yaml
+.github/workflows/firebase-hosting-merge.yml
 ```
 
-### Azure Configuration
+Deploys to: https://tech-dive.sydney
 
-Required Azure resources:
+## 📝 Data Model
 
-1. **Static Web App** (Free tier)
-2. **Cosmos DB** (Serverless, Australia East)
-3. **Azure AD B2C** (Free tier) - Google & Microsoft auth
-4. **Communication Services** (Email) - requires domain
-
-## 📦 Deployment
-
-### Option 1: GitHub Actions (Recommended)
-
-1. Push code to GitHub: `notionparallax/boat-finder`
-2. Create Azure resources using Bicep
-3. Configure GitHub secrets:
-   - `AZURE_STATIC_WEB_APPS_API_TOKEN`
-4. Push to main branch → auto-deploys
-
-### Option 2: Azure CLI
-
-```powershell
-# Build frontend
-npm run build
-
-# Deploy (requires Azure Static Web Apps CLI)
-swa deploy ./build --api-location ./api
+### Users Collection
+```javascript
+{
+  userId: string,
+  email: string,
+  firstName: string,
+  lastName: string,
+  phone: string,
+  photoURL: string,
+  certLevel: string,
+  maxDepth: number,
+  notificationThreshold: number,
+  isOperator: boolean
+}
 ```
 
-## 🗄️ Database Setup
+### Availability Collection
+```javascript
+{
+  date: "YYYY-MM-DD",
+  userId: string,
+  displayName: string,
+  maxDepth: number,
+  photoURL: string
+}
+```
 
-### Cosmos DB Containers
+### Dive Sites Collection
+```javascript
+{
+  name: string,
+  location: { lat, lng },
+  depth: { min, max },
+  description: string,
+  access: "boat" | "shore" | "both",
+  type: "wreck" | "reef" | "wall"
+}
+```
 
-Create these containers in `BoatFinderDB`:
+## 🤝 Contributing
 
-1. **Users**
-   - Partition key: `/userId`
-   - Items: user profiles
+This is an open source project for the Sydney tech diving community. Contributions welcome!
 
-2. **Availability**
-   - Partition key: `/userId`
-   - Items: date availability records
-
-3. **DiveSites**
-   - Partition key: `/siteId`
-   - Items: dive site information
-
-4. **SiteInterest**
-   - Partition key: `/siteId`
-   - Items: diver interest in sites
-
-### Seed Data
-
-53 Sydney dive sites from `Wreck locations- wrecks.csv.csv` - seed script to be created.
-
-## 🎯 Next Steps
-
-### Immediate (Before First Deploy)
-
-1. **Purchase domain** (e.g., `sydneytechdiving.au`)
-2. **Create Azure resources:**
-   - Resource Group: `rg-boat-finder`
-   - Region: Australia East
-3. **Configure Azure AD B2C:**
-   - Create tenant
-   - Register Google & Microsoft identity providers
-   - Configure user flows
-4. **Deploy Bicep infrastructure**
-5. **Seed Cosmos DB with dive sites**
-
-### Post-Deploy
-
-1. Test authentication flow
-2. Create your admin account
-3. Invite beta testers (10-20 divers, 2-3 operators)
-4. Configure email notifications once domain is verified
-5. Gather feedback and iterate
-
-## 💰 Cost Estimate
-
-- Static Web App: **$0** (Free tier)
-- Cosmos DB: **$2-5/month** (Serverless, low usage)
-- Azure AD B2C: **$0** (Free tier, <50K auth/month)
-- Email: **$0** (Free tier, <500 emails/month)
-- Domain: **~$1-2/month** (annual cost divided by 12)
-
-**Total: ~$3-7/month** ✅ Well under $10 target
-
-## 🛠️ Development Notes
-
-- **Framework**: SvelteKit 2.x with Svelte 5 runes
-- **Styling**: Raw CSS with scoped styles + Melt UI for interactions
-- **Language**: Modern JavaScript (ES2022+), no TypeScript
-- **Icons**: Lucide Svelte
-- **Auth**: Azure Static Web Apps built-in auth
-- **Timezone**: Display in Sydney time (AEDT/AEST), store UTC
-
-## 📝 TODO
-
-- [ ] Create Bicep infrastructure templates
-- [ ] Create GitHub Actions workflow
-- [ ] Implement remaining Azure Functions (availability, sites, admin)
-- [ ] Create database seed script
-- [ ] Add email notification logic (pending domain)
-- [ ] Write tests
-- [ ] Create operator documentation
-
-## 👤 Admin Contact
-
-**Ben Doherty**
-
-- Email: <ben@notionparallax.co.uk>
-- GitHub: [@notionparallax](https://github.com/notionparallax)
+1. Fork the repo
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## 📄 License
 
-Private project - Community service for Sydney tech diving community
+MIT License - see LICENSE file for details
+
+## 🙏 Acknowledgments
+
+- Sydney tech diving community
+- OpenStreetMap for map tiles
+- Lucide Icons for UI icons
+
+## 📞 Contact
+
+Questions? Reach out via GitHub issues or the tech dive community.
 
 ---
 
-**Status**: 🚧 In Development - Core application complete, infrastructure setup pending
+**Note**: This is a community project built to solve a real coordination problem in the Sydney technical diving scene. It's not a commercial platform - just divers helping divers find dive buddies and boat operators find divers.
