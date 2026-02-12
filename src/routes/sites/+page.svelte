@@ -479,11 +479,9 @@
           </div>
         </div>
       {/each}
-    </div>
 
-    {#if sitesWithoutCoords.length > 0}
-      <h3 class="unknown-location-header">Unknown Location</h3>
-      <div class="sites-grid">
+      {#if sitesWithoutCoords.length > 0}
+        <h3 class="unknown-location-header">Unknown Location</h3>
         {#each sitesWithoutCoords as site}
           <div class="site-card" role="article">
             <div class="site-header">
@@ -536,8 +534,8 @@
             {/if}
           </div>
         {/each}
-      </div>
-    {/if}
+      {/if}
+    </div>
   </main>
 {/if}
 
@@ -585,6 +583,7 @@
   }
 
   .unknown-location-header {
+    grid-column: 1 / -1;
     margin: var(--spacing-xl) 0 var(--spacing-md) 0;
     color: var(--text-on-calendar);
     font-size: 1.3rem;
@@ -595,11 +594,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-  }
-
-  /* Only the first sites-grid (with coordinates) should grow to fill space */
-  .map-container + .sites-grid {
     flex: 1;
     overflow-y: auto;
     align-content: start;
