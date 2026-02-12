@@ -3,6 +3,7 @@
   import { userApi } from "$lib/api/client.js";
   import Header from "$lib/components/Header.svelte";
   import { refreshUserProfile, user } from "$lib/stores/auth.js";
+  import { invalidateCalendarCache } from "$lib/stores/dataCache.js";
   import { toast } from "$lib/stores/toast";
   import { logger } from "$lib/utils/logger";
   import { onMount } from "svelte";
@@ -41,6 +42,9 @@
 
       // Refresh user store so home page sees updated profile
       await refreshUserProfile();
+
+      // Invalidate calendar cache so pill colors update with new maxDepth
+      invalidateCalendarCache();
 
       toast.success("Profile updated successfully!");
       goto("/");
@@ -112,12 +116,12 @@
             min="10"
             max="150"
             required
-            onblur={() => depthTouched = true}
+            onblur={() => (depthTouched = true)}
           />
           {#if depthTouched && profile.maxDepth > 0 && profile.maxDepth < 30}
             <div class="depth-popover">
-              We're so glad you're here, but most of the dives here are going
-              to be deeper than that
+              We're so glad you're here, but most of the dives here are going to
+              be deeper than that
             </div>
           {/if}
         </label>
@@ -256,7 +260,7 @@
   }
 
   .depth-popover::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 100%;
     left: 20px;
@@ -265,7 +269,7 @@
   }
 
   .depth-popover::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 100%;
     left: 22px;
