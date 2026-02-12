@@ -181,7 +181,10 @@
     border: none;
     color: var(--text-on-background);
     cursor: pointer;
-    padding: var(--spacing-sm);
+    padding: var(--spacing-md);
+    margin: calc(var(--spacing-sm) * -1);
+    min-width: 48px;
+    min-height: 48px;
   }
 
   .desktop-nav {
