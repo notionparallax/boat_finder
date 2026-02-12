@@ -595,6 +595,11 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  /* Only the first sites-grid (with coordinates) should grow to fill space */
+  .map-container + .sites-grid {
     flex: 1;
     overflow-y: auto;
     align-content: start;
