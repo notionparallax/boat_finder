@@ -1,5 +1,5 @@
-import { writable } from 'svelte/store';
 import { logger } from '$lib/utils/logger';
+import { writable } from 'svelte/store';
 
 /**
  * Simple in-memory cache with TTL (time-to-live)
@@ -26,12 +26,12 @@ function isFresh(timestamp) {
 export function getCachedCalendar() {
     let cached;
     calendarCache.subscribe(value => cached = value)();
-    
+
     if (isFresh(cached.timestamp)) {
         logger.log('Using cached calendar data');
         return cached.data;
     }
-    
+
     logger.log('Calendar cache expired or empty');
     return null;
 }
@@ -53,12 +53,12 @@ export function setCachedCalendar(data) {
 export function getCachedSites() {
     let cached;
     sitesCache.subscribe(value => cached = value)();
-    
+
     if (isFresh(cached.timestamp)) {
         logger.log('Using cached sites data');
         return cached.data;
     }
-    
+
     logger.log('Sites cache expired or empty');
     return null;
 }

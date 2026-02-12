@@ -1,7 +1,11 @@
 <script>
   import { availabilityApi } from "$lib/api/client.js";
   import { user } from "$lib/stores/auth.js";
-  import { getCachedCalendar, setCachedCalendar, invalidateCalendarCache } from "$lib/stores/dataCache.js";
+  import {
+    getCachedCalendar,
+    invalidateCalendarCache,
+    setCachedCalendar,
+  } from "$lib/stores/dataCache.js";
   import { toast } from "$lib/stores/toast";
   import {
     formatDateISO,
@@ -110,10 +114,11 @@
       myDates.delete(dateStr);
       // Remove user's pill from availabilityData
       if (availabilityData[dateStr]) {
-        availabilityData[dateStr].divers = availabilityData[dateStr].divers.filter(
-          (d) => d.userId !== $user?.uid
-        );
-        availabilityData[dateStr].count = availabilityData[dateStr].divers.length;
+        availabilityData[dateStr].divers = availabilityData[
+          dateStr
+        ].divers.filter((d) => d.userId !== $user?.uid);
+        availabilityData[dateStr].count =
+          availabilityData[dateStr].divers.length;
       }
     } else {
       myDates.add(dateStr);
@@ -127,7 +132,8 @@
           userId: $user?.uid,
           firstName: $user?.firstName,
           lastName: $user?.lastName,
-          displayName: $user?.displayName || `${$user?.firstName} ${$user?.lastName}`,
+          displayName:
+            $user?.displayName || `${$user?.firstName} ${$user?.lastName}`,
           maxDepth: $user?.maxDepth,
           photoURL: $user?.photoURL,
         },
@@ -138,9 +144,9 @@
     availabilityData = availabilityData; // Trigger reactivity
 
     // Update cache immediately with optimistic data
-    setCachedCalendar({ 
-      availabilityData, 
-      myDates: Array.from(myDates) 
+    setCachedCalendar({
+      availabilityData,
+      myDates: Array.from(myDates),
     });
 
     // Then sync with backend
@@ -157,8 +163,27 @@
           divers: updatedData.divers || [],
           count: updatedData.divers?.length || 0,
         };
+        
+        // CRITICAL: Sync myDates with actual backend state
+        // Check if user is in the updated divers list
+        const userIsInDivers = updatedData.divers?.some(
+          (d) => d.userId === $user?.uid
+        );
+        if (userIsInDivers) {
+          myDates.add(dateStr);
+        } else {
+          myDates.delete(dateStr);
+        }
+        
+        myDates = myDates; // Trigger reactivity
         availabilityData = availabilityData; // Trigger reactivity
         
+        // Update cache with synchronized state
+        setCachedCalendar({
+          availabilityData,
+          myDates: Array.from(myDates),
+        });
+
         // Invalidate cache so next page load gets fresh data
         invalidateCalendarCache();
       }
@@ -180,16 +205,18 @@
               photoURL: $user?.photoURL,
             },
           ];
-          availabilityData[dateStr].count = availabilityData[dateStr].divers.length;
+          availabilityData[dateStr].count =
+            availabilityData[dateStr].divers.length;
         }
       } else {
         myDates.delete(dateStr);
         // Remove user's pill
         if (availabilityData[dateStr]) {
-          availabilityData[dateStr].divers = availabilityData[dateStr].divers.filter(
-            (d) => d.userId !== $user?.uid
-          );
-          availabilityData[dateStr].count = availabilityData[dateStr].divers.length;
+          availabilityData[dateStr].divers = availabilityData[
+            dateStr
+          ].divers.filter((d) => d.userId !== $user?.uid);
+          availabilityData[dateStr].count =
+            availabilityData[dateStr].divers.length;
         }
       }
       myDates = myDates; // Trigger reactivity

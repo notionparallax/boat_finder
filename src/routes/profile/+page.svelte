@@ -113,8 +113,8 @@
           />
           {#if profile.maxDepth > 0 && profile.maxDepth < 30}
             <span class="depth-warning"
-              >We're so glad you're here, but most of the dives here are going to
-              be deeper than that</span
+              >We're so glad you're here, but most of the dives here are going
+              to be deeper than that</span
             >
           {/if}
         </label>

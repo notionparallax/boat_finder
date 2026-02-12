@@ -7,9 +7,11 @@ Operators need to coordinate with 6-12 interested divers for each trip. Manually
 ## Two-Stage Approach
 
 ### Stage 1: Initial Coordination (Email)
+
 Send group email to all interested divers to gauge final interest and discuss details.
 
 ### Stage 2: Day-Of Logistics (WhatsApp)
+
 Export contacts and create WhatsApp group with confirmed divers for real-time coordination.
 
 ---
@@ -71,7 +73,7 @@ Cheers,
 ### Email Implementation
 
 - **Location**: DayDetailModal.svelte (operator-only view)
-- **Button**: "Email All Divers" 
+- **Button**: "Email All Divers"
 - **Backend**: Azure Function sends via Communication Services
 - **Cost**: $0.005 per email × 8 divers = $0.04 per dive (~$0.80/month for 20 dives)
 - **Development time**: 2-3 hours
@@ -157,24 +159,28 @@ END:VCARD
 ## Alternative Options Considered
 
 ### WhatsApp Business API
+
 - ❌ Cannot create groups programmatically (only 1-on-1 messages)
 - ❌ $0.005-0.09 per conversation
 - ❌ 2-3 weeks development + Meta verification
 - **Verdict**: Doesn't solve group creation problem
 
 ### Telegram Bot API
+
 - ✅ Can create groups programmatically (free)
 - ✅ Full automation possible
 - ❌ Requires all users have Telegram (adoption barrier)
 - **Verdict**: Technically perfect, but wrong platform for diving community
 
 ### WhatsApp Web Automation (unofficial)
+
 - ✅ Can create groups programmatically
 - ❌ Against WhatsApp ToS (ban risk)
 - ❌ Unreliable, breaks frequently
 - **Verdict**: Too risky for community service
 
 ### SMS Broadcasting
+
 - ❌ Not a real group chat
 - ❌ $0.01-0.05 per SMS × 8 = $0.40 per dive
 - **Verdict**: Doesn't enable conversation

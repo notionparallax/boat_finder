@@ -9,7 +9,11 @@
   };
 </script>
 
-<span class="pill" style="background-color: {getDepthColor(diver.maxDepth)}">
+<span
+  class="pill"
+  style="background-color: {getDepthColor(diver.maxDepth)}"
+  data-depth={diver.maxDepth}
+>
   {#if diver.photoURL}
     <img
       src={diver.photoURL}

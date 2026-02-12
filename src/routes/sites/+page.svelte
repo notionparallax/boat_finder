@@ -5,7 +5,11 @@
   import Header from "$lib/components/Header.svelte";
   import { db } from "$lib/firebase.js";
   import { user } from "$lib/stores/auth.js";
-  import { getCachedSites, setCachedSites, invalidateSitesCache } from "$lib/stores/dataCache.js";
+  import {
+    getCachedSites,
+    invalidateSitesCache,
+    setCachedSites,
+  } from "$lib/stores/dataCache.js";
   import { toast } from "$lib/stores/toast";
   import { logger } from "$lib/utils/logger";
   import {
@@ -40,7 +44,7 @@
   let sitesWithCoords = $derived(
     visibleSites.filter((site) => site.latitude && site.longitude)
   );
-  
+
   let sitesWithoutCoords = $derived(
     sites.filter((site) => !site.latitude || !site.longitude)
   );
@@ -239,7 +243,8 @@
           userId: $user?.uid,
           firstName: $user?.firstName,
           lastName: $user?.lastName,
-          displayName: $user?.displayName || `${$user?.firstName} ${$user?.lastName}`,
+          displayName:
+            $user?.displayName || `${$user?.firstName} ${$user?.lastName}`,
           maxDepth: $user?.maxDepth,
           photoURL: $user?.photoURL,
         },
@@ -253,7 +258,7 @@
       const isInterested = site.interestedDivers?.some(
         (d) => d.userId === $user?.uid
       );
-      
+
       marker.setPopupContent(
         `
         <div style="min-width: 200px;">
@@ -480,10 +485,7 @@
       <h3 class="unknown-location-header">Unknown Location</h3>
       <div class="sites-grid">
         {#each sitesWithoutCoords as site}
-          <div
-            class="site-card"
-            role="article"
-          >
+          <div class="site-card" role="article">
             <div class="site-header">
               <div>
                 <h3>{site.name}</h3>

@@ -237,7 +237,8 @@
     margin-bottom: 0.5em;
   }
   .explainer h2 {
-    margin-top: 0;
+    column-span: all;
+    margin-bottom: 0.5em;
   }
   .explainer h3 {
     margin-top: 0.5em;
