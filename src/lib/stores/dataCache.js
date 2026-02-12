@@ -24,10 +24,11 @@ function createCache(name, ttl = DEFAULT_TTL) {
 
     return {
         get() {
+            /** @type {{ data: any, timestamp: number | null }} */
             let cached;
             store.subscribe(value => cached = value)();
 
-            if (isFresh(cached.timestamp)) {
+            if (cached && isFresh(cached.timestamp)) {
                 logger.log(`Using cached ${name} data`);
                 return cached.data;
             }

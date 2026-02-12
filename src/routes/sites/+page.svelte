@@ -61,7 +61,7 @@
     }
   });
 
-  onMount(async () => {
+  onMount(() => {
     // Wait for the map container to be available
     const checkContainer = () => {
       if (!mapContainer) {
@@ -308,6 +308,7 @@
 
   // Expose toggleInterest to window for popup button clicks
   if (typeof window !== "undefined") {
+    // @ts-ignore - Adding custom property to window
     window.toggleSiteInterest = (siteId) => {
       toggleInterest(siteId);
     };

@@ -5,7 +5,7 @@
   import { signOut } from "firebase/auth";
   import { Menu, Plus, X } from "lucide-svelte";
 
-  let { user: currentUser, pageTitle, onAddClick } = $props();
+  let { user: currentUser, pageTitle = "", onAddClick = null } = $props();
   let mobileMenuOpen = $state(false);
 
   async function handleLogout() {

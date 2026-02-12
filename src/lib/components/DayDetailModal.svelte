@@ -13,8 +13,8 @@
   let minDepth = $state(null);
   let modalElement = $state(null);
 
-  onMount(async () => {
-    await loadDivers();
+  onMount(() => {
+    loadDivers();
 
     // Focus trap and escape key handler
     const handleKeydown = (e) => {
