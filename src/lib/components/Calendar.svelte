@@ -270,7 +270,7 @@
     const threeMonthsFromNow = new Date();
     threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
 
-    if (isMobile) {
+    if ($viewport.isMobile) {
       // Next week
       const nextWeek = new Date(currentWeekStart);
       nextWeek.setDate(currentWeekStart.getDate() + 7);
