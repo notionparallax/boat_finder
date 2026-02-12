@@ -48,6 +48,3 @@ Thumbs.db
 # IDE
 .vscode/settings.json
 .idea/
-
-*.mp4
-*.webm
