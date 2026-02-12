@@ -16,6 +16,7 @@
     operatorNotificationThreshold: null,
   });
   let saving = $state(false);
+  let depthTouched = $state(false);
 
   onMount(() => {
     if ($user) {
@@ -33,6 +34,7 @@
 
   async function handleSubmit(e) {
     e.preventDefault();
+    depthTouched = true;
     saving = true;
     try {
       await userApi.updateProfile(profile);
@@ -110,8 +112,9 @@
             min="10"
             max="150"
             required
+            onblur={() => depthTouched = true}
           />
-          {#if profile.maxDepth > 0 && profile.maxDepth < 30}
+          {#if depthTouched && profile.maxDepth > 0 && profile.maxDepth < 30}
             <div class="depth-popover">
               We're so glad you're here, but most of the dives here are going
               to be deeper than that
