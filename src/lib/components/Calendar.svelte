@@ -188,28 +188,35 @@
       // Silently update from backend without reloading full calendar
       // This prevents scroll bounce while keeping data in sync
       if (updatedData) {
-        availabilityData[dateStr] = {
-          date: dateStr,
-          divers: updatedData.divers || [],
-          count: updatedData.divers?.length || 0,
-        };
+        // Only update availabilityData if backend returned the divers list
+        // Otherwise, trust the optimistic update we already made
+        if (updatedData.divers !== undefined) {
+          console.log("Backend returned divers list, updating availabilityData");
+          availabilityData[dateStr] = {
+            date: dateStr,
+            divers: updatedData.divers || [],
+            count: updatedData.divers?.length || 0,
+          };
 
-        // CRITICAL: Sync myDates with actual backend state
-        // Check if user is in the updated divers list
-        const userIsInDivers = updatedData.divers?.some(
-          (d) => d.userId === $user?.userId
-        );
-        console.log("--- SYNCING WITH BACKEND ---");
-        console.log("User in backend divers list?", userIsInDivers);
-        console.log("Before sync - myDates has date?", myDates.has(dateStr));
+          // CRITICAL: Sync myDates with actual backend state
+          // Check if user is in the updated divers list
+          const userIsInDivers = updatedData.divers?.some(
+            (d) => d.userId === $user?.userId
+          );
+          console.log("--- SYNCING WITH BACKEND ---");
+          console.log("User in backend divers list?", userIsInDivers);
+          console.log("Before sync - myDates has date?", myDates.has(dateStr));
 
-        if (userIsInDivers) {
-          myDates.add(dateStr);
+          if (userIsInDivers) {
+            myDates.add(dateStr);
+          } else {
+            myDates.delete(dateStr);
+          }
+
+          console.log("After sync - myDates has date?", myDates.has(dateStr));
         } else {
-          myDates.delete(dateStr);
+          console.log("Backend did not return divers list, trusting optimistic update");
         }
-
-        console.log("After sync - myDates has date?", myDates.has(dateStr));
 
         myDates = myDates; // Trigger reactivity
         availabilityData = availabilityData; // Trigger reactivity
