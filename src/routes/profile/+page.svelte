@@ -77,15 +77,21 @@
       <div class="form-section">
         <h2>Personal Information</h2>
 
-        <label for="firstName">
-          First Name
-        </label>
-        <input id="firstName" type="text" bind:value={profile.firstName} required />
+        <label for="firstName"> First Name </label>
+        <input
+          id="firstName"
+          type="text"
+          bind:value={profile.firstName}
+          required
+        />
 
-        <label for="lastName">
-          Last Name
-        </label>
-        <input id="lastName" type="text" bind:value={profile.lastName} required />
+        <label for="lastName"> Last Name </label>
+        <input
+          id="lastName"
+          type="text"
+          bind:value={profile.lastName}
+          required
+        />
 
         <p class="info-text">Email: {$user.email}</p>
       </div>
@@ -93,14 +99,10 @@
       <div class="form-section">
         <h2>Diving Details</h2>
 
-        <label for="phone">
-          Phone Number
-        </label>
+        <label for="phone"> Phone Number </label>
         <input id="phone" type="tel" bind:value={profile.phone} required />
 
-        <label for="certLevel">
-          Certification Level
-        </label>
+        <label for="certLevel"> Certification Level </label>
         <input
           id="certLevel"
           type="text"
@@ -133,9 +135,7 @@
         <div class="form-section">
           <h2>Operator Settings</h2>
 
-          <label for="notificationThreshold">
-            Notification Threshold
-          </label>
+          <label for="notificationThreshold"> Notification Threshold </label>
           <input
             id="notificationThreshold"
             type="number"

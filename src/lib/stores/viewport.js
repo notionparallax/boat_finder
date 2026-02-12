@@ -24,7 +24,7 @@ function createViewportStore() {
         };
 
         window.addEventListener('resize', updateViewport);
-        
+
         // Cleanup handled by component unmount
         if (typeof window !== 'undefined') {
             window.addEventListener('beforeunload', () => {

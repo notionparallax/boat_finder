@@ -1,5 +1,5 @@
 <script>
-  import { getDepthColor } from "$lib/utils/depthColors.js";
+  import { getDepthColor, isLightDepthColor } from "$lib/utils/depthColors.js";
 
   let { diver } = $props();
 
@@ -11,6 +11,7 @@
 
 <span
   class="pill"
+  class:light-bg={isLightDepthColor(diver.maxDepth)}
   style="background-color: {getDepthColor(diver.maxDepth)}"
   data-depth={diver.maxDepth}
 >
@@ -47,12 +48,21 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 
+  .pill.light-bg {
+    color: rgba(0, 0, 0, 0.87);
+    text-shadow: none;
+  }
+
   .avatar {
     width: 20px;
     height: 20px;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .light-bg .avatar {
+    border-color: rgba(0, 0, 0, 0.2);
   }
 
   .avatar-fallback {
@@ -66,6 +76,11 @@
     font-size: 0.65rem;
     font-weight: 600;
     border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .light-bg .avatar-fallback {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
   }
 
   .name {

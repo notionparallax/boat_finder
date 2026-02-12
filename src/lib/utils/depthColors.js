@@ -45,6 +45,17 @@ export function getDepthColor(depth) {
 }
 
 /**
+ * Determine if a depth color is light and needs dark text for contrast
+ * @param {number} depth - Depth in meters
+ * @returns {boolean} True if text should be dark
+ */
+export function isLightDepthColor(depth) {
+    // Light backgrounds (< 40m) need dark text
+    // This ensures WCAG AA contrast ratio of 4.5:1
+    return depth < 40;
+}
+
+/**
  * Sort divers by depth (shallowest first)
  * @param {Array} divers - Array of diver objects with maxDepth property
  * @returns {Array} Sorted array

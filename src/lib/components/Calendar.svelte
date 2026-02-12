@@ -6,14 +6,14 @@
     invalidateCalendarCache,
     setCachedCalendar,
   } from "$lib/stores/dataCache.js";
-  import { viewport } from "$lib/stores/viewport.js";
   import { toast } from "$lib/stores/toast";
+  import { viewport } from "$lib/stores/viewport.js";
   import {
     formatDateISO,
     getCalendarDateRange,
     getMonthGrid,
-    getWeekStart,
     getWeekDays,
+    getWeekStart,
   } from "$lib/utils/dateHelpers.js";
   import { logger } from "$lib/utils/logger";
   import { Phone } from "lucide-svelte";
@@ -345,8 +345,11 @@
       disabled={!canGoPrevious()}>←</button
     >
     <h2>{getMonthName()}</h2>
-    <button onclick={nextMonth} class="nav-button" aria-label={$viewport.isMobile ? "Next week" : "Next month"} disabled={!canGoNext()}
-      >→</button
+    <button
+      onclick={nextMonth}
+      class="nav-button"
+      aria-label={$viewport.isMobile ? "Next week" : "Next month"}
+      disabled={!canGoNext()}>→</button
     >
   </div>
 
@@ -648,7 +651,9 @@
     color: white;
     border: none;
     border-radius: var(--radius-sm);
-    padding: 4px 6px;
+    padding: 8px 12px;
+    min-width: 48px;
+    min-height: 48px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -662,7 +667,7 @@
   }
 
   .operator-contact-btn.mobile {
-    padding: 6px 8px;
+    padding: 10px 14px;
   }
 
   @media (max-width: 768px) {

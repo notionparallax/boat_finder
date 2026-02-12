@@ -1,13 +1,13 @@
-import { 
-    format, 
-    addMonths, 
-    startOfMonth, 
-    endOfMonth, 
-    eachDayOfInterval,
-    startOfWeek,
-    endOfWeek,
+import {
+    addDays,
+    addMonths,
     isSameDay as dateFnsSameDay,
-    addDays
+    eachDayOfInterval,
+    endOfMonth,
+    endOfWeek,
+    format,
+    startOfMonth,
+    startOfWeek
 } from 'date-fns';
 
 /**
@@ -57,14 +57,14 @@ export function getCalendarDateRange() {
 export function getMonthGrid(year, month) {
     const firstDay = startOfMonth(new Date(year, month));
     const lastDay = endOfMonth(new Date(year, month));
-    
+
     // Get all days from the start of the week containing the first day
     // to the end of the week containing the last day
     const start = startOfWeek(firstDay, { weekStartsOn: 0 }); // Sunday
     const end = endOfWeek(lastDay, { weekStartsOn: 0 });
-    
+
     const allDays = eachDayOfInterval({ start, end });
-    
+
     // Group into weeks
     const weeks = [];
     for (let i = 0; i < allDays.length; i += 7) {
@@ -74,7 +74,7 @@ export function getMonthGrid(year, month) {
         });
         weeks.push(week);
     }
-    
+
     return weeks;
 }
 
