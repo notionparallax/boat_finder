@@ -558,7 +558,7 @@
     padding: var(--spacing-md);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius-sm);
-    background: white;
+    background: rgba(255, 255, 255, 0.9);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -576,11 +576,11 @@
 
   .day-cell.my-day {
     border: 2px solid var(--bg-gradient-start);
-    background: rgba(74, 155, 155, 0.1);
+    background: white;
   }
 
   .day-cell.past {
-    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.3);
     cursor: not-allowed;
   }
 
