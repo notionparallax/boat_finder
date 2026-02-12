@@ -62,7 +62,7 @@
 
 {#if $user}
   <Header user={$user} />
-  <main class="container">
+  <main id="main-content" class="container">
     <form class="profile-form" onsubmit={handleSubmit}>
       {#if !$user.firstName || !$user.lastName}
         <div class="welcome-message">
@@ -77,15 +77,15 @@
       <div class="form-section">
         <h2>Personal Information</h2>
 
-        <label>
+        <label for="firstName">
           First Name
-          <input type="text" bind:value={profile.firstName} required />
         </label>
+        <input id="firstName" type="text" bind:value={profile.firstName} required />
 
-        <label>
+        <label for="lastName">
           Last Name
-          <input type="text" bind:value={profile.lastName} required />
         </label>
+        <input id="lastName" type="text" bind:value={profile.lastName} required />
 
         <p class="info-text">Email: {$user.email}</p>
       </div>
@@ -93,57 +93,60 @@
       <div class="form-section">
         <h2>Diving Details</h2>
 
-        <label>
+        <label for="phone">
           Phone Number
-          <input type="tel" bind:value={profile.phone} required />
         </label>
+        <input id="phone" type="tel" bind:value={profile.phone} required />
 
-        <label>
+        <label for="certLevel">
           Certification Level
-          <input
-            type="text"
-            bind:value={profile.certLevel}
-            placeholder="e.g., TDI ANDP, PADI Tec50, etc."
-            required
-          />
         </label>
+        <input
+          id="certLevel"
+          type="text"
+          bind:value={profile.certLevel}
+          placeholder="e.g., TDI ANDP, PADI Tec50, etc."
+          required
+        />
 
-        <label class="depth-field">
+        <label for="maxDepth" class="depth-field">
           Maximum Certified Depth (meters)
-          <input
-            type="number"
-            bind:value={profile.maxDepth}
-            min="10"
-            max="150"
-            required
-            onblur={() => (depthTouched = true)}
-          />
-          {#if depthTouched && profile.maxDepth > 0 && profile.maxDepth < 30}
-            <div class="depth-popover">
-              We're so glad you're here, but most of the dives here are going to
-              be deeper than that
-            </div>
-          {/if}
         </label>
+        <input
+          id="maxDepth"
+          type="number"
+          bind:value={profile.maxDepth}
+          min="10"
+          max="150"
+          required
+          onblur={() => (depthTouched = true)}
+        />
+        {#if depthTouched && profile.maxDepth > 0 && profile.maxDepth < 30}
+          <div class="depth-popover">
+            We're so glad you're here, but most of the dives here are going to
+            be deeper than that
+          </div>
+        {/if}
       </div>
 
       {#if $user.isOperator}
         <div class="form-section">
           <h2>Operator Settings</h2>
 
-          <label>
+          <label for="notificationThreshold">
             Notification Threshold
-            <input
-              type="number"
-              bind:value={profile.operatorNotificationThreshold}
-              min="1"
-              max="50"
-              placeholder="Notify when X divers are interested"
-            />
-            <span class="help-text"
-              >You'll receive a daily email when days meet this threshold</span
-            >
           </label>
+          <input
+            id="notificationThreshold"
+            type="number"
+            bind:value={profile.operatorNotificationThreshold}
+            min="1"
+            max="50"
+            placeholder="Notify when X divers are interested"
+          />
+          <span class="help-text"
+            >You'll receive a daily email when days meet this threshold</span
+          >
         </div>
       {/if}
 

@@ -384,7 +384,7 @@
     pageTitle="Dive Sites"
     onAddClick={() => (showAddForm = !showAddForm)}
   />
-  <main class="container">
+  <main id="main-content" class="container">
     {#if showAddForm}
       <form class="add-form" onsubmit={handleSubmit}>
         <input

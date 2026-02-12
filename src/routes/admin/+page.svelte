@@ -44,7 +44,7 @@
 
 {#if $user && $user.isOperator}
   <Header user={$user} pageTitle="Admin" />
-  <main class="container">
+  <main id="main-content" class="container">
     <h1>Admin Panel</h1>
 
     <div class="search-section">

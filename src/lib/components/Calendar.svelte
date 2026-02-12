@@ -341,10 +341,11 @@
     <button
       onclick={previousMonth}
       class="nav-button"
+      aria-label={$viewport.isMobile ? "Previous week" : "Previous month"}
       disabled={!canGoPrevious()}>←</button
     >
     <h2>{getMonthName()}</h2>
-    <button onclick={nextMonth} class="nav-button" disabled={!canGoNext()}
+    <button onclick={nextMonth} class="nav-button" aria-label={$viewport.isMobile ? "Next week" : "Next month"} disabled={!canGoNext()}
       >→</button
     >
   </div>

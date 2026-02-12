@@ -58,12 +58,12 @@
 {#if loading}
   <div class="login-container">
     <div class="login-card">
-      <p>Loading...</p>
+      <p aria-live="polite" aria-busy="true">Loading...</p>
     </div>
   </div>
 {:else if $user}
   <Header user={$user} />
-  <main class="container full-screen">
+  <main id="main-content" class="container full-screen">
     <div class="calendar-header-section">
       <!-- <h1>Dive Availability Calendar</h1> -->
     </div>
@@ -107,7 +107,7 @@
   </main>
 {:else}
   <div class="login-container">
-    <video autoplay muted loop playsinline preload="none" class="bg-video">
+    <video autoplay muted loop playsinline aria-hidden="true" class="bg-video">
       <source src="/output1.webm" type="video/webm" />
     </video>
     <div class="login-card">
