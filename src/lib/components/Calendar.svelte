@@ -108,24 +108,8 @@
 
     const dateStr = formatDateISO(date);
 
-    // DEBUG: Log initial state
-    console.log("=== CLICK START ===");
-    console.log("Date:", dateStr);
-    console.log("User ID (userId):", $user?.userId);
-    console.log("myDates has date?", myDates.has(dateStr));
-    console.log("myDates contents:", Array.from(myDates));
-    console.log(
-      "availabilityData for date:",
-      JSON.parse(JSON.stringify(availabilityData[dateStr] || null))
-    );
-    console.log(
-      "User in availabilityData?",
-      availabilityData[dateStr]?.divers?.some((d) => d.userId === $user?.userId)
-    );
-
     // Optimistic update: Update UI immediately
     const wasMyDay = myDates.has(dateStr);
-    console.log("Action:", wasMyDay ? "REMOVING" : "ADDING");
 
     if (wasMyDay) {
       myDates.delete(dateStr);
@@ -160,18 +144,6 @@
     myDates = myDates; // Trigger reactivity
     availabilityData = availabilityData; // Trigger reactivity
 
-    // DEBUG: Log after optimistic update
-    console.log("--- AFTER OPTIMISTIC UPDATE ---");
-    console.log("myDates has date?", myDates.has(dateStr));
-    console.log(
-      "availabilityData divers count:",
-      availabilityData[dateStr]?.divers?.length
-    );
-    console.log(
-      "User in availabilityData?",
-      availabilityData[dateStr]?.divers?.some((d) => d.userId === $user?.userId)
-    );
-
     // Update cache immediately with optimistic data
     setCachedCalendar({
       availabilityData,
@@ -182,8 +154,6 @@
     try {
       // API returns data directly (not wrapped in {success, data})
       const updatedData = await availabilityApi.toggleAvailability(dateStr);
-      console.log("--- BACKEND RESPONSE ---");
-      console.log("Updated data:", JSON.parse(JSON.stringify(updatedData)));
 
       // Silently update from backend without reloading full calendar
       // This prevents scroll bounce while keeping data in sync
@@ -191,7 +161,6 @@
         // Only update availabilityData if backend returned the divers list
         // Otherwise, trust the optimistic update we already made
         if (updatedData.divers !== undefined) {
-          console.log("Backend returned divers list, updating availabilityData");
           availabilityData[dateStr] = {
             date: dateStr,
             divers: updatedData.divers || [],
@@ -203,19 +172,12 @@
           const userIsInDivers = updatedData.divers?.some(
             (d) => d.userId === $user?.userId
           );
-          console.log("--- SYNCING WITH BACKEND ---");
-          console.log("User in backend divers list?", userIsInDivers);
-          console.log("Before sync - myDates has date?", myDates.has(dateStr));
 
           if (userIsInDivers) {
             myDates.add(dateStr);
           } else {
             myDates.delete(dateStr);
           }
-
-          console.log("After sync - myDates has date?", myDates.has(dateStr));
-        } else {
-          console.log("Backend did not return divers list, trusting optimistic update");
         }
 
         myDates = myDates; // Trigger reactivity
@@ -229,7 +191,6 @@
 
         // Invalidate cache so next page load gets fresh data
         invalidateCalendarCache();
-        console.log("=== CLICK END (SUCCESS) ===\n");
       }
     } catch (error) {
       logger.error("Failed to toggle availability:", error);
