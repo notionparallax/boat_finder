@@ -48,3 +48,7 @@ Thumbs.db
 # IDE
 .vscode/settings.json
 .idea/
+
+# Large video source files
+input_vids/
+output1.webm
