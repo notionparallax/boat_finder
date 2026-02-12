@@ -237,9 +237,9 @@
 
   .depth-popover {
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 0;
-    margin-top: 8px;
+    margin-bottom: 8px;
     padding: 12px 16px;
     background: white;
     border: 2px solid #d97706;
@@ -255,18 +255,18 @@
   .depth-popover::before {
     content: '';
     position: absolute;
-    bottom: 100%;
+    top: 100%;
     left: 20px;
     border: 8px solid transparent;
-    border-bottom-color: #d97706;
+    border-top-color: #d97706;
   }
 
   .depth-popover::after {
     content: '';
     position: absolute;
-    bottom: 100%;
+    top: 100%;
     left: 22px;
     border: 6px solid transparent;
-    border-bottom-color: white;
+    border-top-color: white;
   }
 </style>
