@@ -10,8 +10,7 @@
     "dependencies": {
         "@azure/communication-email": "^1.0.0",
         "@azure/cosmos": "^4.0.0",
-        "@azure/functions": "^4.0.0",
-        "@dataconnect/generated": "file:src/dataconnect-generated"
+        "@azure/functions": "^4.0.0"
     },
     "devDependencies": {
         "azure-functions-core-tools": "^4.0.0"
