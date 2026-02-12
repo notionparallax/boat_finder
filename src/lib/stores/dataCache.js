@@ -2,93 +2,105 @@ import { logger } from '$lib/utils/logger';
 import { writable } from 'svelte/store';
 
 /**
- * Simple in-memory cache with TTL (time-to-live)
+ * Generic cache factory with TTL (time-to-live)
  * Data persists across page navigations but clears on browser refresh
  */
 
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// Cache stores
-export const calendarCache = writable({ data: null, timestamp: null });
-export const sitesCache = writable({ data: null, timestamp: null });
+const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Check if cached data is still fresh
+ * Create a cache instance
+ * @param {string} name - Cache name for logging
+ * @param {number} ttl - Time to live in milliseconds
+ * @returns {object} Cache instance with get/set/invalidate methods
  */
-function isFresh(timestamp) {
-    if (!timestamp) return false;
-    return Date.now() - timestamp < CACHE_TTL;
+function createCache(name, ttl = DEFAULT_TTL) {
+    const store = writable({ data: null, timestamp: null });
+
+    function isFresh(timestamp) {
+        if (!timestamp) return false;
+        return Date.now() - timestamp < ttl;
+    }
+
+    return {
+        get() {
+            let cached;
+            store.subscribe(value => cached = value)();
+
+            if (isFresh(cached.timestamp)) {
+                logger.log(`Using cached ${name} data`);
+                return cached.data;
+            }
+
+            logger.log(`${name} cache expired or empty`);
+            return null;
+        },
+
+        set(data) {
+            store.set({
+                data,
+                timestamp: Date.now()
+            });
+            logger.log(`${name} data cached`);
+        },
+
+        invalidate() {
+            store.set({ data: null, timestamp: null });
+            logger.log(`${name} cache invalidated`);
+        }
+    };
 }
+
+// Create cache instances
+const calendarCache = createCache('Calendar');
+const sitesCache = createCache('Sites');
 
 /**
  * Get cached calendar data if fresh
  */
 export function getCachedCalendar() {
-    let cached;
-    calendarCache.subscribe(value => cached = value)();
-
-    if (isFresh(cached.timestamp)) {
-        logger.log('Using cached calendar data');
-        return cached.data;
-    }
-
-    logger.log('Calendar cache expired or empty');
-    return null;
+    return calendarCache.get();
 }
 
 /**
  * Set calendar cache
  */
 export function setCachedCalendar(data) {
-    calendarCache.set({
-        data,
-        timestamp: Date.now()
-    });
-    logger.log('Calendar data cached');
+    calendarCache.set(data);
 }
 
 /**
  * Get cached sites data if fresh
  */
 export function getCachedSites() {
-    let cached;
-    sitesCache.subscribe(value => cached = value)();
-
-    if (isFresh(cached.timestamp)) {
-        logger.log('Using cached sites data');
-        return cached.data;
-    }
-
-    logger.log('Sites cache expired or empty');
-    return null;
+    return sitesCache.get();
 }
 
 /**
  * Set sites cache
  */
 export function setCachedSites(data) {
-    sitesCache.set({
-        data,
-        timestamp: Date.now()
-    });
-    logger.log('Sites data cached');
+    sitesCache.set(data);
 }
 
 /**
- * Invalidate all caches (e.g., after user makes changes)
+ * Invalidate calendar cache
  */
 export function invalidateCalendarCache() {
-    calendarCache.set({ data: null, timestamp: null });
-    logger.log('Calendar cache invalidated');
+    calendarCache.invalidate();
 }
 
+/**
+ * Invalidate sites cache
+ */
 export function invalidateSitesCache() {
-    sitesCache.set({ data: null, timestamp: null });
-    logger.log('Sites cache invalidated');
+    sitesCache.invalidate();
 }
 
+/**
+ * Invalidate all caches
+ */
 export function invalidateAllCaches() {
-    invalidateCalendarCache();
-    invalidateSitesCache();
-    logger.log('All caches invalidated');
+    calendarCache.invalidate();
+    sitesCache.invalidate();
 }

@@ -6,11 +6,14 @@
     invalidateCalendarCache,
     setCachedCalendar,
   } from "$lib/stores/dataCache.js";
+  import { viewport } from "$lib/stores/viewport.js";
   import { toast } from "$lib/stores/toast";
   import {
     formatDateISO,
     getCalendarDateRange,
     getMonthGrid,
+    getWeekStart,
+    getWeekDays,
   } from "$lib/utils/dateHelpers.js";
   import { logger } from "$lib/utils/logger";
   import { Phone } from "lucide-svelte";
@@ -27,41 +30,15 @@
   let selectedDate = $state(null);
   let showModal = $state(false);
   let isOperator = $state(false);
-  let isMobile = $state(false);
   let currentWeekStart = $state(new Date());
 
-  onMount(() => {
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  });
-
-  function checkMobile() {
-    isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      // Set to current week on mobile
+  // Use viewport store for mobile detection
+  $effect(() => {
+    if ($viewport.isMobile) {
       const today = new Date();
       currentWeekStart = getWeekStart(today);
     }
-  }
-
-  function getWeekStart(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    // Start on Monday: if Sunday (0), go back 6 days; otherwise go back (day - 1) days
-    const diff = d.getDate() - (day === 0 ? 6 : day - 1);
-    return new Date(d.setDate(diff));
-  }
-
-  function getWeekDays(startDate) {
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startDate);
-      day.setDate(startDate.getDate() + i);
-      days.push(day);
-    }
-    return days;
-  }
+  });
 
   $effect(() => {
     isOperator = $user?.isOperator || false;
@@ -242,7 +219,7 @@
   function previousMonth() {
     const today = new Date();
 
-    if (isMobile) {
+    if ($viewport.isMobile) {
       // Previous week
       const prevWeek = new Date(currentWeekStart);
       prevWeek.setDate(currentWeekStart.getDate() - 7);
@@ -271,7 +248,7 @@
   function canGoPrevious() {
     const today = new Date();
 
-    if (isMobile) {
+    if ($viewport.isMobile) {
       const prevWeek = new Date(currentWeekStart);
       prevWeek.setDate(currentWeekStart.getDate() - 7);
       return prevWeek >= getWeekStart(today);
@@ -321,7 +298,7 @@
     const threeMonthsFromNow = new Date();
     threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
 
-    if (isMobile) {
+    if ($viewport.isMobile) {
       const nextWeek = new Date(currentWeekStart);
       nextWeek.setDate(currentWeekStart.getDate() + 7);
       return nextWeek <= threeMonthsFromNow;
@@ -336,7 +313,7 @@
   }
 
   function getMonthName() {
-    if (isMobile) {
+    if ($viewport.isMobile) {
       const weekEnd = new Date(currentWeekStart);
       weekEnd.setDate(currentWeekStart.getDate() + 6);
 
@@ -373,7 +350,7 @@
   </div>
 
   <div class="calendar">
-    {#if !isMobile}
+    {#if !$viewport.isMobile}
       <div class="weekday-headers">
         {#each ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as day}
           <div class="weekday">{day}</div>
@@ -381,8 +358,8 @@
       </div>
     {/if}
 
-    <div class="days-grid" class:mobile-week={isMobile}>
-      {#if isMobile}
+    <div class="days-grid" class:mobile-week={$viewport.isMobile}>
+      {#if $viewport.isMobile}
         {#each getWeekDays(currentWeekStart) as day}
           {@const dateStr = formatDateISO(day)}
           {@const dayData = availabilityData[dateStr] || {
