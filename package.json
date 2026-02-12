@@ -9,6 +9,7 @@
         "preview": "vite preview",
         "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+        "validate": "npm run check && cd api && npm install --package-lock-only",
         "lint": "prettier --check . && eslint .",
         "format": "prettier --write .",
         "test": "vitest run",
