@@ -102,7 +102,7 @@
           />
         </label>
 
-        <label>
+        <label class="depth-field">
           Maximum Certified Depth (meters)
           <input
             type="number"
@@ -112,10 +112,10 @@
             required
           />
           {#if profile.maxDepth > 0 && profile.maxDepth < 30}
-            <span class="depth-warning"
-              >We're so glad you're here, but most of the dives here are going
-              to be deeper than that</span
-            >
+            <div class="depth-popover">
+              We're so glad you're here, but most of the dives here are going
+              to be deeper than that
+            </div>
           {/if}
         </label>
       </div>
@@ -231,12 +231,42 @@
     cursor: not-allowed;
   }
 
-  .depth-warning {
-    display: block;
-    margin-top: var(--spacing-xs);
+  .depth-field {
+    position: relative;
+  }
+
+  .depth-popover {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    padding: 12px 16px;
+    background: white;
+    border: 2px solid #d97706;
+    border-radius: 8px;
     color: #d97706;
-    font-size: 0.85rem;
-    font-weight: normal;
-    font-style: italic;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    max-width: 300px;
+  }
+
+  .depth-popover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 20px;
+    border: 8px solid transparent;
+    border-bottom-color: #d97706;
+  }
+
+  .depth-popover::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 22px;
+    border: 6px solid transparent;
+    border-bottom-color: white;
   }
 </style>
