@@ -1,232 +1,127 @@
-notes:
-
-Diagnostics
-Minify JavaScript Est savings of 92 KiB
-Minifying JavaScript files can reduce payload sizes and script parse time. Learn how to minify JavaScript.FCPLCPUnscored
-URL
-Transfer Size
-Est Savings
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/utilities/xregexp-all.js
-74.9 KiB
-31.1 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/translate/translation/translate.js
-34.6 KiB
-14.4 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/utilities/utilities.js
-18.4 KiB
-7.9 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/browser-polyfill.js
-8.5 KiB
-5.6 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/proxy.js
-11.7 KiB
-4.7 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/utilities/utilities_item.js
-11.2 KiB
-4.6 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/utilities/date.js
-8.3 KiB
-3.4 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/translate/rdf/rdfparser.js
-6.5 KiB
-3.2 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/http.js
-7.3 KiB
-3.2 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/itemSaver.js
-7.2 KiB
-3.0 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/translate/rdf/identity.js
-6.1 KiB
-3.0 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/inject/pageSaving.js
-7.6 KiB
-2.9 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/translate/utilities_translate.js
-5.2 KiB
-2.5 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/inject/progressWindow_inject.js
-5.0 KiB
-2.4 KiB
-Reduce unused JavaScript Est savings of 397 KiB
-Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity. Learn how to reduce unused JavaScript.FCPLCPUnscored
-URL
-Transfer Size
-Est Savings
-Unattributable
-1,151.8 KiB 325.1 KiB
-chrome-extension://hdokiejnpimakedhajhdlcegeplioahd/web-client-content-script.js
-1,117.1 KiB
-299.5 KiB
-chrome-extension://ekhagklcjbdpajgpjgmbionohlpdbjgc/translate/translation/translate.js
-34.6 KiB
-25.6 KiB
-tech-dive.sydney 1st party
-89.0 KiB 72.0 KiB
-…chunks/pm65bsg_.js(tech-dive.sydney)
-89.0 KiB
-72.0 KiB
-Avoid long main-thread tasks 2 long tasks found
-More information about the performance of your application. These numbers don't directly affect the Performance score.
-Passed audits (23)
-Show
-92
-Accessibility
-These checks highlight opportunities to improve the accessibility of your web app. Automatic detection can only detect a subset of issues and does not guarantee the accessibility of your web app, so manual testing is also encouraged.
-Contrast
-Background and foreground colors do not have a sufficient contrast ratio.
-Low-contrast text is difficult or impossible for many users to read. Learn how to provide sufficient color contrast.
-Failing Elements
-TB
-<span class="avatar-fallback svelte-wr5x4j">
-TB Tali B
-<span class="pill svelte-wr5x4j" data-depth="20" style="background-color: rgb(190, 240, 255);">
-Tali B
-<span class="name svelte-wr5x4j">
-TB Tali B
-<span class="pill svelte-wr5x4j" data-depth="20" style="background-color: rgb(190, 240, 255);">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-14 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-15 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-16 (1) TF Teresa F
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-TB
-<span class="avatar-fallback svelte-wr5x4j">
-TB Tali B
-<span class="pill svelte-wr5x4j" data-depth="20" style="background-color: rgb(190, 240, 255);">
-Tali B
-<span class="name svelte-wr5x4j">
-TB Tali B
-<span class="pill svelte-wr5x4j" data-depth="20" style="background-color: rgb(190, 240, 255);">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-19 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-20 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-21 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-22 (1) TF Teresa F
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-(1)
-<span class="day-count svelte-1iu5iby">
-24 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-25 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-(1)
-<span class="day-count svelte-1iu5iby">
-27 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-Ben D
-<span class="name svelte-wr5x4j">
-BD Ben D
-<span class="pill svelte-wr5x4j" data-depth="45" style="background-color: rgb(63, 169, 154);">
-These are opportunities to improve the legibility of your content.
-Best practices
-Touch targets do not have sufficient size or spacing.
-Touch targets with sufficient size and spacing help users who may have difficulty targeting small controls to activate the targets. Learn more about touch targets.
-Failing Elements
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-13 (3) TB Tali B BD Ben D BD B D
-<div role="button" class="day-cell svelte-1iu5iby my-day" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-14 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-15 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-16 (1) TF Teresa F
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-18 (3) TB Tali B BD Ben D BD B D
-<div role="button" class="day-cell svelte-1iu5iby my-day" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-19 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-20 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-21 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-22 (1) TF Teresa F
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-24 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-25 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-div.days-grid > div.day-cell > div.day-header > button.operator-contact-btn
-<button class="operator-contact-btn svelte-1iu5iby">
-27 (1) BD Ben D
-<div role="button" class="day-cell svelte-1iu5iby" tabindex="0" aria-disabled="false">
-These items highlight common accessibility best practices.
-Additional items to manually check (10)
-Show
-These items address areas which an automated testing tool cannot cover. Learn more in our guide on conducting an accessibility review.
+Crawling and Indexing
+robots.txt is not valid 40 errors found
+If your robots.txt file is malformed, crawlers may not be able to understand how you want your website to be crawled or indexed. Learn more about robots.txt.
+Line #
+Content
+Error
+1
+<!DOCTYPE html>
+Syntax not understood
+2
+<html lang="en">
+Syntax not understood
+4
+<head>
+Syntax not understood
+5
+<meta charset="utf-8" />
+Syntax not understood
+6
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+Syntax not understood
+7
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+Syntax not understood
+8
+<meta name="description"
+Syntax not understood
+9
+content="Sydney Tech Diving Availability Coordinator - Connect divers with boat operators" />
+Syntax not understood
+11
+<link rel="modulepreload" href="/_app/immutable/entry/start.U5k0B4ff.js">
+Syntax not understood
+12
+<link rel="modulepreload" href="/_app/immutable/chunks/BkHPlIO9.js">
+Syntax not understood
+13
+<link rel="modulepreload" href="/_app/immutable/chunks/CkfhLJbn.js">
+Syntax not understood
+14
+<link rel="modulepreload" href="/_app/immutable/chunks/BaRWrvqW.js">
+Syntax not understood
+15
+<link rel="modulepreload" href="/_app/immutable/entry/app.BytGax0u.js">
+Syntax not understood
+16
+<link rel="modulepreload" href="/_app/immutable/chunks/PPVm8Dsz.js">
+Syntax not understood
+17
+<link rel="modulepreload" href="/_app/immutable/chunks/Bv70ncIZ.js">
+Syntax not understood
+18
+<link rel="modulepreload" href="/_app/immutable/chunks/CX0WT3vr.js">
+Syntax not understood
+19
+<link rel="modulepreload" href="/_app/immutable/chunks/DmRzDgMj.js">
+Syntax not understood
+20
+<link rel="modulepreload" href="/_app/immutable/chunks/DpgafMEd.js">
+Syntax not understood
+21
+<link rel="modulepreload" href="/_app/immutable/chunks/COmirGrg.js">
+Syntax not understood
+22
+<link rel="modulepreload" href="/_app/immutable/chunks/C30aWFTJ.js">
+Syntax not understood
+23
+</head>
+Syntax not understood
+25
+<body data-sveltekit-preload-data="hover">
+Syntax not understood
+26
+<div style="display: contents">
+Unknown directive
+27
+<script>
+Syntax not understood
+28
+{
+Syntax not understood
+29
+__sveltekit_huv01n = {
+Syntax not understood
+30
+base: ""
+Unknown directive
+31
+};
+Syntax not understood
+33
+const element = document.currentScript.parentElement;
+Syntax not understood
+35
+Promise.all([
+Syntax not understood
+36
+import("/_app/immutable/entry/start.U5k0B4ff.js"),
+Syntax not understood
+37
+import("/_app/immutable/entry/app.BytGax0u.js")
+Syntax not understood
+38
+]).then(([kit, app]) => {
+Syntax not understood
+39
+kit.start(app, element);
+Syntax not understood
+40
+});
+Syntax not understood
+41
+}
+Syntax not understood
+42
+</script>
+Syntax not understood
+43
+</div>
+Syntax not understood
+44
+</body>
+Syntax not understood
+46
+</html>
+Syntax not understood
+To appear in search results, crawlers need access to your app.

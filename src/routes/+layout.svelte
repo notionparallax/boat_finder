@@ -20,7 +20,7 @@
     left: 0;
     background: var(--bg-gradient-start);
     color: white;
-    padding: 8px 16px;
+    padding: var(--spacing-sm) var(--spacing-md);
     text-decoration: none;
     border-radius: 0 0 4px 0;
     z-index: 9999;

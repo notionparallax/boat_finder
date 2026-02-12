@@ -249,8 +249,8 @@
     position: absolute;
     bottom: 100%;
     left: 0;
-    margin-bottom: 8px;
-    padding: 12px 16px;
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm-plus) var(--spacing-md);
     background: white;
     border: 2px solid #d97706;
     border-radius: 8px;

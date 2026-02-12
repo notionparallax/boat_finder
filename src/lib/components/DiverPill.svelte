@@ -38,8 +38,8 @@
   .pill {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 8px 3px 3px;
+    gap: var(--spacing-2xs);
+    padding: 3px var(--spacing-sm) 3px 3px;
     border-radius: var(--radius-pill);
     font-size: 0.8rem;
     color: white;

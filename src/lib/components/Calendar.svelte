@@ -556,7 +556,7 @@
     min-height: 120px;
     max-height: 140px;
     padding: var(--spacing-md);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: var(--border-standard);
     border-radius: var(--radius-sm);
     background: rgba(255, 255, 255, 0.9);
     display: flex;
@@ -575,7 +575,8 @@
   }
 
   .day-cell.my-day {
-    border: 2px solid var(--bg-gradient-start);
+    border: var(--border-strong);
+    border-color: var(--bg-gradient-start);
     background: white;
   }
 
@@ -593,7 +594,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 4px;
+    gap: var(--spacing-2xs);
     width: 100%;
   }
 
@@ -642,18 +643,16 @@
   .divers-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: var(--spacing-2xs);
     align-items: center;
   }
 
   .operator-contact-btn {
-    background: var(--bg-gradient-start);
+    background: var(--safety-orange);
     color: white;
     border: none;
     border-radius: var(--radius-sm);
-    padding: 8px 12px;
-    min-width: 48px;
-    min-height: 48px;
+    padding: var(--spacing-2xs) var(--spacing-xs);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -667,7 +666,9 @@
   }
 
   .operator-contact-btn.mobile {
-    padding: 10px 14px;
+    padding: var(--spacing-sm) var(--spacing-sm-plus);
+    min-width: 48px;
+    min-height: 48px;
   }
 
   @media (max-width: 768px) {
