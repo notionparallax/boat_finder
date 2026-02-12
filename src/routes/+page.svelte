@@ -103,6 +103,17 @@
         each other's phone numbers as well. This is supposed to be a community
         project, so it's going to be driven by what that community wants.
       </p>
+      <h3><em>Nothing</em> is guaranteed</h3>
+      <p>
+        Just because you click a date, doesn't mean you're going diving on that
+        date. It just means you're interested. If boat operators see a lot of
+        interest in a particular date, they might reach out to the people who
+        clicked it and try to organise something. Or they might not, it's up to
+        them. Skippers need days off, boats need to get serviced, there's all
+        kinds of rasons that things might not happen, but this all increases the
+        changes that they <em>will</em>. This is just a tool to help people find
+        each other, but it's not a booking system or anything like that.
+      </p>
     </div>
   </main>
 {:else}
