@@ -111,7 +111,7 @@
     // DEBUG: Log initial state
     console.log("=== CLICK START ===");
     console.log("Date:", dateStr);
-    console.log("User ID:", $user?.uid);
+    console.log("User ID (userId):", $user?.userId);
     console.log("myDates has date?", myDates.has(dateStr));
     console.log("myDates contents:", Array.from(myDates));
     console.log(
@@ -120,7 +120,7 @@
     );
     console.log(
       "User in availabilityData?",
-      availabilityData[dateStr]?.divers?.some((d) => d.userId === $user?.uid)
+      availabilityData[dateStr]?.divers?.some((d) => d.userId === $user?.userId)
     );
 
     // Optimistic update: Update UI immediately
@@ -133,7 +133,7 @@
       if (availabilityData[dateStr]) {
         availabilityData[dateStr].divers = availabilityData[
           dateStr
-        ].divers.filter((d) => d.userId !== $user?.uid);
+        ].divers.filter((d) => d.userId !== $user?.userId);
         availabilityData[dateStr].count =
           availabilityData[dateStr].divers.length;
       }
@@ -146,7 +146,7 @@
       availabilityData[dateStr].divers = [
         ...availabilityData[dateStr].divers,
         {
-          userId: $user?.uid,
+          userId: $user?.userId,
           firstName: $user?.firstName,
           lastName: $user?.lastName,
           displayName:
@@ -169,7 +169,7 @@
     );
     console.log(
       "User in availabilityData?",
-      availabilityData[dateStr]?.divers?.some((d) => d.userId === $user?.uid)
+      availabilityData[dateStr]?.divers?.some((d) => d.userId === $user?.userId)
     );
 
     // Update cache immediately with optimistic data
@@ -180,18 +180,14 @@
 
     // Then sync with backend
     try {
-      const response = await availabilityApi.toggleAvailability(dateStr);
+      // API returns data directly (not wrapped in {success, data})
+      const updatedData = await availabilityApi.toggleAvailability(dateStr);
       console.log("--- BACKEND RESPONSE ---");
-      console.log("Response success:", response.success);
-      console.log(
-        "Response data:",
-        JSON.parse(JSON.stringify(response.data || null))
-      );
+      console.log("Updated data:", JSON.parse(JSON.stringify(updatedData)));
 
       // Silently update from backend without reloading full calendar
       // This prevents scroll bounce while keeping data in sync
-      if (response.success && response.data) {
-        const updatedData = response.data;
+      if (updatedData) {
         availabilityData[dateStr] = {
           date: dateStr,
           divers: updatedData.divers || [],
@@ -201,7 +197,7 @@
         // CRITICAL: Sync myDates with actual backend state
         // Check if user is in the updated divers list
         const userIsInDivers = updatedData.divers?.some(
-          (d) => d.userId === $user?.uid
+          (d) => d.userId === $user?.userId
         );
         console.log("--- SYNCING WITH BACKEND ---");
         console.log("User in backend divers list?", userIsInDivers);
@@ -239,7 +235,7 @@
           availabilityData[dateStr].divers = [
             ...availabilityData[dateStr].divers,
             {
-              userId: $user?.uid,
+              userId: $user?.userId,
               firstName: $user?.firstName,
               lastName: $user?.lastName,
               maxDepth: $user?.maxDepth,
@@ -255,7 +251,7 @@
         if (availabilityData[dateStr]) {
           availabilityData[dateStr].divers = availabilityData[
             dateStr
-          ].divers.filter((d) => d.userId !== $user?.uid);
+          ].divers.filter((d) => d.userId !== $user?.userId);
           availabilityData[dateStr].count =
             availabilityData[dateStr].divers.length;
         }
