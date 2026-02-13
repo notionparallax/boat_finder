@@ -107,7 +107,13 @@ async function sendDigestEmails(testEmail = null, testThreshold = null) {
     const fromEmailAddr = emailFrom.value() || "ben@tech-dive.sydney";
 
     for (const operator of operators) {
-        const threshold = operator.operatorNotificationThreshold || 0;
+        const threshold = operator.operatorNotificationThreshold;
+
+        // Skip operators who have disabled notifications (threshold 0, null, or undefined)
+        if (!threshold || threshold <= 0) {
+            console.log(`Skipping ${operator.email} - notifications disabled (threshold: ${threshold})`);
+            continue;
+        }
 
         // Find dates that meet operator's threshold
         const newDatesOverThreshold = [];

@@ -149,7 +149,8 @@
             placeholder="Notify when X divers are interested"
           />
           <div class="help-text">
-            You'll receive a daily email when days meet this threshold
+            <p>You'll receive a daily email when days meet this threshold</p>
+            <p>Set to 0 to turn off the daily notifications.</p>
           </div>
         </div>
       {/if}
