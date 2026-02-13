@@ -209,7 +209,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-md);
+    margin-top: var(--spacing-md);
     font-weight: 500;
   }
 
