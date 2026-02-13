@@ -122,7 +122,7 @@
       <source src="/output1.webm" type="video/webm" />
     </video>
     <div class="login-card">
-      <!-- <h1>Boat Finder</h1> -->
+      <h1>Boat Finder</h1>
       <!-- <p>Sydney Tech Diving Availability Coordinator</p> -->
       <div class="login-buttons">
         <button onclick={signInWithGoogle} class="login-button">
@@ -154,10 +154,10 @@
     margin-bottom: var(--spacing-md);
   }
 
-  h1 {
+  /* h1 {
     font-size: 2rem;
     margin-bottom: var(--spacing-sm);
-  }
+  } */
 
   .login-container {
     display: flex;
