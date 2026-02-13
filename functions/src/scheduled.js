@@ -1,17 +1,17 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { getFirestore } = require("firebase-admin/firestore");
 const { setGlobalOptions } = require("firebase-functions/v2");
+const { defineSecret } = require("firebase-functions/params");
 const sgMail = require("@sendgrid/mail");
 
 // Set default region for all functions
 setGlobalOptions({ region: "australia-southeast1" });
 
-const db = getFirestore();
+// Define secrets for SendGrid
+const sendgridApiKey = defineSecret("SENDGRID_API_KEY");
+const emailFrom = defineSecret("EMAIL_FROM");
 
-// Initialize SendGrid
-if (process.env.SENDGRID_API_KEY) {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-}
+const db = getFirestore();
 
 /**
  * Daily digest email notification
@@ -22,15 +22,19 @@ exports.dailyDigest = onSchedule(
     {
         schedule: "0 16 * * *",
         timeZone: "Australia/Sydney",
+        secrets: [sendgridApiKey, emailFrom],
     },
     async (event) => {
         try {
             console.log("Daily digest triggered");
 
-            if (!process.env.SENDGRID_API_KEY) {
+            // Initialize SendGrid with secret value
+            const apiKey = sendgridApiKey.value();
+            if (!apiKey) {
                 console.warn("SENDGRID_API_KEY not configured - skipping email send");
                 return;
             }
+            sgMail.setApiKey(apiKey);
 
             // Get date 7 days from now
             const targetDate = new Date();
@@ -100,13 +104,14 @@ exports.dailyDigest = onSchedule(
 
             // Send emails to operators using SendGrid
             const emailPromises = [];
+            const fromEmail = emailFrom.value() || "ben@tech-dive.sydney";
             
             operatorsSnapshot.forEach((doc) => {
                 const operator = doc.data();
                 
                 const msg = {
                     to: operator.email,
-                    from: process.env.EMAIL_FROM || "ben@tech-dive.sydney",
+                    from: fromEmail,
                     replyTo: "ben@tech-dive.sydney",
                     subject: `${diverCount} divers available on ${formattedDate}`,
                     html: `
