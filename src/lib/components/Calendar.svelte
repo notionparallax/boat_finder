@@ -317,15 +317,14 @@
       const weekEnd = new Date(currentWeekStart);
       weekEnd.setDate(currentWeekStart.getDate() + 6);
 
-      return `${currentWeekStart.toLocaleDateString("en-AU", {
+      const settings = {
         day: "numeric",
         month: "short",
         timeZone: "Australia/Sydney",
-      })} - ${weekEnd.toLocaleDateString("en-AU", {
-        day: "numeric",
-        month: "short",
-        timeZone: "Australia/Sydney",
-      })}`;
+      };
+      const start_week = currentWeekStart.toLocaleDateString("en-AU", settings);
+      const end_week = weekEnd.toLocaleDateString("en-AU", settings);
+      return `${start_week} – ${end_week}`;
     }
 
     return currentDate.toLocaleDateString("en-AU", {
