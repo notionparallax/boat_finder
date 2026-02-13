@@ -34,6 +34,11 @@
       </h1>
     </div>
 
+    <!-- Page-specific actions slot (desktop only) -->
+    <div class="header-actions">
+      <slot name="actions"></slot>
+    </div>
+
     <!-- Mobile hamburger button -->
     <button
       class="mobile-menu-button"
@@ -135,6 +140,19 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: var(--spacing-lg);
+  }
+
+  .header-actions {
+    display: none;
+    flex: 1;
+    justify-content: center;
+  }
+
+  @media (min-width: 769px) {
+    .header-actions {
+      display: flex;
+    }
   }
 
   .logo {

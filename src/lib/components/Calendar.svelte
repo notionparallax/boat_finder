@@ -337,7 +337,7 @@
 </script>
 
 <div class="calendar-container">
-  <div class="calendar-header">
+  <div class="calendar-header can-move-to-header">
     <button
       onclick={previousMonth}
       class="nav-button"
@@ -493,18 +493,74 @@
     margin-bottom: var(--spacing-lg);
   }
 
+  @media (min-width: 769px) {
+    .calendar-header.can-move-to-header {
+      position: fixed;
+      top: var(--spacing-xs);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      margin-bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: var(--radius-pill);
+      padding: var(--spacing-2xs);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      pointer-events: auto;
+      gap: 0;
+    }
+
+    .calendar-header.can-move-to-header > * {
+      pointer-events: auto;
+    }
+
+    .calendar-container {
+      padding-top: 0;
+    }
+  }
+
   .calendar-header h2 {
     font-size: 1.5rem;
     color: var(--text-on-calendar);
+    margin: 0;
+  }
+
+  @media (min-width: 769px) {
+    .calendar-header.can-move-to-header h2 {
+      color: var(--text-on-calendar);
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: var(--spacing-xs) var(--spacing-lg);
+      min-width: 180px;
+      text-align: center;
+    }
   }
 
   .nav-button {
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--bg-gradient-start);
     color: white;
+    border: none;
     border-radius: var(--radius-md);
     font-size: 1.2rem;
     transition: opacity 0.2s;
+    cursor: pointer;
+  }
+
+  @media (min-width: 769px) {
+    .calendar-header.can-move-to-header .nav-button {
+      padding: var(--spacing-xs) var(--spacing-md);
+      font-size: 1rem;
+      border-radius: 0;
+      background: var(--bg-gradient-start);
+    }
+
+    .calendar-header.can-move-to-header .nav-button:first-child {
+      border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+    }
+
+    .calendar-header.can-move-to-header .nav-button:last-child {
+      border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+    }
   }
 
   .nav-button:hover:not(:disabled) {
