@@ -63,7 +63,7 @@
 {#if $user}
   <Header user={$user} />
   <main id="main-content" class="container">
-    <form class="profile-form" onsubmit={handleSubmit}>
+    <form class="profile-form" class:is-operator={$user.isOperator} onsubmit={handleSubmit}>
       {#if !$user.firstName || !$user.lastName}
         <div class="welcome-message">
           <h2>Welcome! Please complete your profile</h2>
@@ -144,9 +144,9 @@
             max="50"
             placeholder="Notify when X divers are interested"
           />
-          <span class="help-text"
-            >You'll receive a daily email when days meet this threshold</span
-          >
+          <div class="help-text">
+            You'll receive a daily email when days meet this threshold
+          </div>
         </div>
       {/if}
 
@@ -159,9 +159,10 @@
 
 <style>
   .container {
-    max-width: 800px;
+    width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-md);
   }
 
   .profile-form {
@@ -169,10 +170,44 @@
     padding: var(--spacing-xl);
     border-radius: var(--radius-lg);
     color: var(--text-on-calendar);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
   }
 
   .form-section {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: 0;
+  }
+
+  @media (min-width: 769px) {
+    .profile-form {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: var(--spacing-xl);
+    }
+
+    .form-section {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .profile-form.is-operator .form-section {
+      flex: 1 1 calc(33.333% - var(--spacing-xl));
+    }
+
+    .profile-form:not(.is-operator) .form-section {
+      flex: 1 1 calc(50% - var(--spacing-xl));
+    }
+
+    .welcome-message {
+      flex: 1 1 100%;
+      margin-bottom: 0;
+    }
+
+    .save-button {
+      flex: 1 1 100%;
+    }
   }
 
   .form-section h2 {
@@ -218,6 +253,7 @@
     border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: var(--radius-sm);
     font-size: 1rem;
+    width: 100%;
   }
 
   .help-text {
