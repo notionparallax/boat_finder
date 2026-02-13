@@ -387,30 +387,24 @@
             aria-disabled={isPast}
           >
             <div class="mobile-day-header">
-              <div class="day-info">
-                <span class="day-name"
-                  >{day.toLocaleDateString("en-AU", { weekday: "short" })}</span
-                >
-                <span class="day-number">{day.getDate()}</span>
-                {#if dayData.count > 0}
-                  <span class="day-count">({dayData.count})</span>
-                  {#if isOperator}
-                    <button
-                      class="operator-contact-btn mobile"
-                      onclick={(e) => handleOperatorContactClick(day, e)}
-                      title="Contact divers"
-                    >
-                      <Phone size={16} />
-                    </button>
-                  {/if}
-                {/if}
-              </div>
+              <span class="day-name"
+                >{day.toLocaleDateString("en-AU", { weekday: "short" })}</span
+              >
+              <span class="day-number">{day.getDate()}</span>
               {#if dayData.count > 0}
-                <div class="divers-list">
-                  {#each dayData.divers.toSorted((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
-                    <DiverPill {diver} />
-                  {/each}
-                </div>
+                <span class="day-count">({dayData.count})</span>
+                {#if isOperator}
+                  <button
+                    class="operator-contact-btn mobile"
+                    onclick={(e) => handleOperatorContactClick(day, e)}
+                    title="Contact divers"
+                  >
+                    <Phone size={16} />
+                  </button>
+                {/if}
+                {#each dayData.divers.toSorted((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
+                  <DiverPill {diver} />
+                {/each}
               {/if}
             </div>
           </div>
@@ -623,28 +617,16 @@
 
   .mobile-day-header {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    width: 100%;
-  }
-
-  .day-info {
-    display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-2xs);
+    width: 100%;
   }
 
   .day-name {
     font-weight: 600;
     font-size: 1rem;
     min-width: 50px;
-  }
-
-  .divers-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-2xs);
-    align-items: center;
   }
 
   .operator-contact-btn {
