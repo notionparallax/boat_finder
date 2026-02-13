@@ -63,7 +63,11 @@
 {#if $user}
   <Header user={$user} />
   <main id="main-content" class="container">
-    <form class="profile-form" class:is-operator={$user.isOperator} onsubmit={handleSubmit}>
+    <form
+      class="profile-form"
+      class:is-operator={$user.isOperator}
+      onsubmit={handleSubmit}
+    >
       {#if !$user.firstName || !$user.lastName}
         <div class="welcome-message">
           <h2>Welcome! Please complete your profile</h2>
