@@ -23,6 +23,8 @@ exports.dailyDigest = onSchedule(
         schedule: "0 16 * * *",
         timeZone: "Australia/Sydney",
         secrets: [sendgridApiKey, emailFrom],
+        memory: "256MiB",
+        timeoutSeconds: 300,
     },
     async (event) => {
         try {
