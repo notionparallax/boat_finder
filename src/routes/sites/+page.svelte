@@ -371,7 +371,8 @@
 </script>
 
 <svelte:head>
-  <title>Dive Sites - Boat Finder</title>
+  <!-- - Boat Finder -->
+  <title>Dive Sites</title>
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"

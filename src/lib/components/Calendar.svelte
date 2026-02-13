@@ -16,7 +16,7 @@
     getWeekStart,
   } from "$lib/utils/dateHelpers.js";
   import { logger } from "$lib/utils/logger";
-  import { Phone } from "lucide-svelte";
+  import { ArrowLeft, ArrowRight, Phone } from "lucide-svelte";
   import { onMount } from "svelte";
   import DayDetailModal from "./DayDetailModal.svelte";
   import DiverPill from "./DiverPill.svelte";
@@ -341,14 +341,14 @@
       onclick={previousMonth}
       class="nav-button"
       aria-label={$viewport.isMobile ? "Previous week" : "Previous month"}
-      disabled={!canGoPrevious()}>←</button
+      disabled={!canGoPrevious()}><ArrowLeft size={20} /></button
     >
     <h2>{getMonthName()}</h2>
     <button
       onclick={nextMonth}
       class="nav-button"
       aria-label={$viewport.isMobile ? "Next week" : "Next month"}
-      disabled={!canGoNext()}>→</button
+      disabled={!canGoNext()}><ArrowRight size={20} /></button
     >
   </div>
 
@@ -480,7 +480,6 @@
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     color: var(--text-on-calendar);
-    max-height: calc(100vh - 80px);
     display: flex;
     flex-direction: column;
   }
@@ -590,23 +589,21 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow: hidden; /* Prevent calendar from overflowing container */
   }
 
   .days-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(6, 1fr);
+    grid-template-rows: repeat(6, minmax(120px, 140px));
     gap: var(--spacing-sm);
-    flex: 1;
-    overflow: auto; /* Allow grid to scroll if needed */
+    overflow: auto;
   }
 
   .day-cell {
     height: 100%;
     min-height: 120px;
     max-height: 140px;
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     border: var(--border-standard);
     border-radius: var(--radius-sm);
     background: rgba(255, 255, 255, 0.9);

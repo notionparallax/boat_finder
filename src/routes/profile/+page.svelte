@@ -57,7 +57,8 @@
 </script>
 
 <svelte:head>
-  <title>Profile - Boat Finder</title>
+  <title>Profile</title>
+  <!-- - Boat Finder -->
 </svelte:head>
 
 {#if $user}

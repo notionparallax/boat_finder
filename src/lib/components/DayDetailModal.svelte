@@ -8,10 +8,17 @@
 
   let { date, onClose } = $props();
 
-  let divers = $state([]);
-  let loading = $state(true);
+  let allDivers = $state([]);
   let minDepth = $state(null);
+  let loading = $state(true);
   let modalElement = $state(null);
+
+  // Computed filtered divers based on minDepth
+  let divers = $derived(
+    minDepth 
+      ? allDivers.filter(diver => diver.maxDepth >= minDepth)
+      : allDivers
+  );
 
   onMount(() => {
     loadDivers();
@@ -34,14 +41,10 @@
 
   async function loadDivers() {
     loading = true;
-    const data = await availabilityApi.getDayDetails(date, minDepth);
+    const data = await availabilityApi.getDayDetails(date);
     // API returns { date, divers } - extract the divers array
-    divers = sortDiversByDepth(data.divers || []);
+    allDivers = sortDiversByDepth(data.divers || []);
     loading = false;
-  }
-
-  function handleFilterChange() {
-    loadDivers();
   }
 
   function copyPhoneNumbers() {
@@ -73,7 +76,7 @@
     <div class="modal-header">
       <h2 id="modal-title">{formatDateDisplay(new Date(date))}</h2>
       <button class="close-button" onclick={onClose} aria-label="Close modal"
-        >×</button
+        ><span>×</span></button
       >
     </div>
 
@@ -81,15 +84,16 @@
       <div class="filters">
         <label>
           Min Depth:
-          <select bind:value={minDepth} onchange={handleFilterChange}>
+          <select bind:value={minDepth}>
             <option value={null}>All divers</option>
-            <option value="45">45m+</option>
-            <option value="50">50m+</option>
-            <option value="60">60m+</option>
-            <option value="70">70m+</option>
-            <option value="80">80m+</option>
-            <option value="90">90m+</option>
-            <option value="100">100m</option>
+            <option value={30}>30m+</option>
+            <option value={45}>45m+</option>
+            <option value={50}>50m+</option>
+            <option value={60}>60m+</option>
+            <option value={70}>70m+</option>
+            <option value={80}>80m+</option>
+            <option value={90}>90m+</option>
+            <option value={100}>100m</option>
           </select>
         </label>
 
@@ -122,10 +126,13 @@
                 {:else}
                   <div class="avatar-placeholder">{diver.firstName[0]}</div>
                 {/if}
-                <span>{diver.firstName} {diver.lastName}</span>
+                <span class="name-depth">
+                  <span class="name">{diver.firstName} {diver.lastName}</span>
+                  <span class="depth">{diver.maxDepth}m</span>
+                </span>
               </div>
               <span class="cert">{diver.certLevel}</span>
-              <span class="depth">{diver.maxDepth}m</span>
+              <span class="depth-desktop">{diver.maxDepth}m</span>
               <a href="tel:{diver.phone}" class="phone-link">
                 <Phone size={16} />
                 {diver.phone}
@@ -179,12 +186,41 @@
   }
 
   .close-button {
-    font-size: 2rem;
-    color: var(--text-on-calendar);
+    font-size: 1.5rem;
+    color: var(--bg-gradient-start);
     line-height: 1;
     padding: 0;
-    width: 2rem;
-    height: 2rem;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid
+      color-mix(in srgb, var(--bg-gradient-start) 30%, transparent);
+    background: color-mix(in srgb, var(--bg-gradient-start) 8%, transparent);
+    transition: all 0.2s;
+  }
+
+  .close-button:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--bg-gradient-start) 15%,
+      transparent
+    );
+    border-color: color-mix(in srgb, var(--bg-gradient-start) 50%, transparent);
+  }
+
+  .close-button:active {
+    background-color: color-mix(
+      in srgb,
+      var(--bg-gradient-start) 25%,
+      transparent
+    );
+  }
+  .close-button span {
+    display: block;
+    transform: translateY(-1px);
   }
 
   .modal-body {
@@ -249,6 +285,39 @@
     gap: var(--spacing-sm);
   }
 
+  .name-depth {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .depth {
+    display: none;
+  }
+
+  .depth-desktop {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .depth {
+      display: inline;
+      font-weight: 600;
+      color: var(--bg-gradient-start);
+    }
+
+    .depth-desktop,
+    .cert {
+      display: none;
+    }
+
+    .name-depth {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+  }
+
   .avatar {
     width: 2rem;
     height: 2rem;
@@ -273,6 +342,26 @@
     align-items: center;
     gap: var(--spacing-xs);
     color: var(--bg-gradient-start);
+    padding: var(--spacing-sm);
+    border-radius: 50%;
+    margin: calc(var(--spacing-sm) * -1);
+    transition: background-color 0.2s;
+  }
+
+  .phone-link:hover {
+    background-color: rgba(0, 102, 204, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    .phone-link {
+      padding: var(--spacing-md);
+      margin: calc(var(--spacing-md) * -1);
+      background-color: rgba(0, 102, 204, 0.05);
+    }
+
+    .phone-link:active {
+      background-color: rgba(0, 102, 204, 0.15);
+    }
   }
 
   @media (max-width: 768px) {

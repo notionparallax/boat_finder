@@ -3,7 +3,15 @@
   import { auth } from "$lib/firebase";
   import { logger } from "$lib/utils/logger";
   import { signOut } from "firebase/auth";
-  import { Menu, Plus, X } from "lucide-svelte";
+  import {
+    Anchor,
+    CalendarDays,
+    CircleUserRound,
+    LogOut,
+    Menu,
+    Plus,
+    X,
+  } from "lucide-svelte";
 
   let { user: currentUser, pageTitle = "", onAddClick = null } = $props();
   let mobileMenuOpen = $state(false);
@@ -30,7 +38,7 @@
   <div class="header-content">
     <div class="logo-section">
       <h1 class="logo">
-        Boat Finder{#if pageTitle}: {pageTitle}{/if}
+        <!-- Boat Finder{#if pageTitle}: {pageTitle}{/if} -->
       </h1>
     </div>
 
@@ -60,9 +68,9 @@
           <span class="add-text">Add Site</span>
         </button>
       {/if}
-      <a href="/">Calendar</a>
-      <a href="/sites">Dive Sites</a>
-      <a href="/profile">Profile</a>
+      <a href="/"><CalendarDays size={18} /> Calendar</a>
+      <a href="/sites"><Anchor size={18} /> Dive Sites</a>
+      <a href="/profile"><CircleUserRound size={18} /> Profile</a>
       {#if currentUser.photoURL}
         <img
           src={currentUser.photoURL}
@@ -70,7 +78,9 @@
           class="profile-photo"
         />
       {/if}
-      <button onclick={handleLogout} class="logout-button">Logout</button>
+      <button onclick={handleLogout} class="logout-button"
+        ><LogOut size={18} /> Logout</button
+      >
     </nav>
   </div>
 
@@ -97,12 +107,14 @@
           <span>Add Site</span>
         </button>
       {/if}
-      <a href="/" onclick={closeMobileMenu} class="mobile-nav-item">Calendar</a>
+      <a href="/" onclick={closeMobileMenu} class="mobile-nav-item"
+        ><CalendarDays size={20} /> Calendar</a
+      >
       <a href="/sites" onclick={closeMobileMenu} class="mobile-nav-item"
-        >Dive Sites</a
+        ><Anchor size={20} /> Dive Sites</a
       >
       <a href="/profile" onclick={closeMobileMenu} class="mobile-nav-item"
-        >Profile</a
+        ><CircleUserRound size={20} /> Profile</a
       >
       <button
         onclick={() => {
@@ -111,7 +123,7 @@
         }}
         class="mobile-nav-item logout-button"
       >
-        Logout
+        <LogOut size={20} /> Logout
       </button>
       {#if currentUser.photoURL}
         <div class="mobile-user-info">
@@ -135,7 +147,6 @@
   }
 
   .header-content {
-    max-width: 1200px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -205,12 +216,13 @@
 
   .desktop-nav a,
   .desktop-nav .logout-button {
-    color: var(--text-on-background);
+    color: white;
     transition: opacity 0.2s;
     padding: var(--spacing-sm);
     min-height: 44px;
     display: flex;
     align-items: center;
+    gap: var(--spacing-xs);
     text-decoration: none;
   }
 

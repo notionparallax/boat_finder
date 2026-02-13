@@ -52,7 +52,7 @@
 </script>
 
 <svelte:head>
-  <title>Boat Finder - Sydney Tech Diving</title>
+  <title>Tech Diving in Sydney</title>
 </svelte:head>
 
 {#if loading}
@@ -122,7 +122,7 @@
       <source src="/output1.webm" type="video/webm" />
     </video>
     <div class="login-card">
-      <h1>Boat Finder</h1>
+      <!-- <h1>Boat Finder</h1> -->
       <!-- <p>Sydney Tech Diving Availability Coordinator</p> -->
       <div class="login-buttons">
         <button onclick={signInWithGoogle} class="login-button">
@@ -147,7 +147,7 @@
     min-height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
-    padding: var(--spacing-md);
+    padding: 0 var(--spacing-md);
   }
 
   .calendar-header-section {
