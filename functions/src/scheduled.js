@@ -1,25 +1,36 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { getFirestore } = require("firebase-admin/firestore");
 const { setGlobalOptions } = require("firebase-functions/v2");
+const sgMail = require("@sendgrid/mail");
 
 // Set default region for all functions
 setGlobalOptions({ region: "australia-southeast1" });
 
 const db = getFirestore();
 
+// Initialize SendGrid
+if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
 /**
  * Daily digest email notification
- * Runs at 8:00 AM Sydney time every day
+ * Runs at 4:00 PM Sydney time every day
  * Checks 7 days ahead and notifies operators if threshold met
  */
 exports.dailyDigest = onSchedule(
     {
-        schedule: "0 8 * * *",
+        schedule: "0 16 * * *",
         timeZone: "Australia/Sydney",
     },
     async (event) => {
         try {
             console.log("Daily digest triggered");
+
+            if (!process.env.SENDGRID_API_KEY) {
+                console.warn("SENDGRID_API_KEY not configured - skipping email send");
+                return;
+            }
 
             // Get date 7 days from now
             const targetDate = new Date();
@@ -87,15 +98,49 @@ exports.dailyDigest = onSchedule(
                 timeZone: "Australia/Sydney",
             });
 
-            // TODO: Send emails to operators
-            // For now, just log what would be sent
+            // Send emails to operators using SendGrid
+            const emailPromises = [];
+            
             operatorsSnapshot.forEach((doc) => {
                 const operator = doc.data();
-                console.log(`Would send email to ${operator.email}:`);
-                console.log(`Subject: ${diverCount} divers available on ${formattedDate}`);
-                console.log(`Divers:\n${diverList}`);
+                
+                const msg = {
+                    to: operator.email,
+                    from: process.env.EMAIL_FROM || "ben@tech-dive.sydney",
+                    replyTo: "ben@tech-dive.sydney",
+                    subject: `${diverCount} divers available on ${formattedDate}`,
+                    html: `
+                        <h2>Boat Finder Daily Digest</h2>
+                        <p>Hi ${operator.firstName || "there"},</p>
+                        <p><strong>${diverCount} tech divers</strong> have indicated availability for <strong>${formattedDate}</strong>.</p>
+                        <h3>Available Divers:</h3>
+                        <pre>${diverList}</pre>
+                        <p>
+                            <a href="https://tech-dive.sydney" style="display: inline-block; padding: 10px 20px; background: #0066cc; color: white; text-decoration: none; border-radius: 4px;">
+                                View Calendar
+                            </a>
+                        </p>
+                        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;" />
+                        <p style="font-size: 12px; color: #666;">
+                            You're receiving this because you're a boat operator and your notification threshold is ${operator.operatorNotificationThreshold} divers.
+                            <br />
+                            Update your preferences at <a href="https://tech-dive.sydney/profile">tech-dive.sydney/profile</a>
+                        </p>
+                    `,
+                };
+
+                emailPromises.push(
+                    sgMail.send(msg)
+                        .then(() => {
+                            console.log(`Email sent to ${operator.email}`);
+                        })
+                        .catch((error) => {
+                            console.error(`Failed to send email to ${operator.email}:`, error);
+                        })
+                );
             });
 
+            await Promise.all(emailPromises);
             console.log("Daily digest completed");
         } catch (error) {
             console.error("Error in daily digest:", error);
