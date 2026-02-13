@@ -386,27 +386,29 @@
             tabindex={isPast ? -1 : 0}
             aria-disabled={isPast}
           >
-            <div class="mobile-day-header">
-              <span class="day-name"
-                >{day.toLocaleDateString("en-AU", { weekday: "short" })}</span
-              >
-              <span class="day-number">{day.getDate()}</span>
-              {#if dayData.count > 0}
-                <span class="day-count">({dayData.count})</span>
-                {#if isOperator}
-                  <button
-                    class="operator-contact-btn mobile"
-                    onclick={(e) => handleOperatorContactClick(day, e)}
-                    title="Contact divers"
-                  >
-                    <Phone size={16} />
-                  </button>
+            <div class="mobile-day-content">
+              <div class="mobile-day-header">
+                <span class="day-name"
+                  >{day.toLocaleDateString("en-AU", { weekday: "short" })}</span
+                >
+                <span class="day-number">{day.getDate()}</span>
+                {#if dayData.count > 0}
+                  <span class="day-count">({dayData.count})</span>
+                  {#each dayData.divers.toSorted((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
+                    <DiverPill {diver} />
+                  {/each}
                 {/if}
-                {#each dayData.divers.toSorted((a, b) => (a.maxDepth || 0) - (b.maxDepth || 0)) as diver}
-                  <DiverPill {diver} />
-                {/each}
-              {/if}
+              </div>
             </div>
+            {#if isOperator && dayData.count > 0}
+              <button
+                class="operator-contact-btn mobile"
+                onclick={(e) => handleOperatorContactClick(day, e)}
+                title="Contact divers"
+              >
+                <Phone size={20} />
+              </button>
+            {/if}
           </div>
         {/each}
       {:else}
@@ -612,7 +614,19 @@
 
   .day-cell.mobile-day {
     min-height: auto;
+    max-height: none;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    overflow: visible;
+  }
+
+  .mobile-day-content {
+    flex: 1;
     padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
   }
 
   .mobile-day-header {
@@ -634,13 +648,15 @@
     color: white;
     border: none;
     border-radius: var(--radius-sm);
-    padding: var(--spacing-2xs) var(--spacing-xs);
+    padding: var(--spacing-xs);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: opacity 0.2s;
     margin-left: 4px;
+    vertical-align: baseline;
+    transform: translateY(2px);
   }
 
   .operator-contact-btn:hover {
@@ -648,9 +664,12 @@
   }
 
   .operator-contact-btn.mobile {
-    padding: var(--spacing-sm) var(--spacing-sm-plus);
-    min-width: 48px;
-    min-height: 48px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    min-width: 60px;
+    height: 100%;
+    border-radius: 0; /* the border radius is dictated by the parent container because it crops it.  */
+    align-self: stretch;
+    transform: none;
   }
 
   @media (max-width: 768px) {
