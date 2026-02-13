@@ -180,18 +180,19 @@ async function sendDigestEmails(testEmail = null, testThreshold = null) {
         emailHtml += `
             <h3>📅 All Upcoming Dates (Next 3 Weeks)</h3>
             <p>${allDatesOverThreshold.length} ${allDatesOverThreshold.length === 1 ? 'date has' : 'dates have'} ${threshold}+ divers:</p>
+            <ul style="list-style: none; padding: 0; margin: 10px 0;">
         `;
         allDatesOverThreshold.forEach((dateInfo) => {
             const diverList = dateInfo.divers
                 .map((d) => `${d.firstName} ${d.lastName} (${d.maxDepth}m)`)
                 .join(", ");
             emailHtml += `
-                <div style="margin: 10px 0; padding: 8px; background: #f9f9f9; border-left: 3px solid #999;">
-                    <strong>${dateInfo.formattedDate}</strong> - ${dateInfo.count} divers<br/>
-                    <span style="font-size: 14px; color: #666;">${diverList}</span>
-                </div>
+                <li style="margin: 5px 0; font-size: 14px;">
+                    <strong>${dateInfo.formattedDate}</strong> - ${dateInfo.count} ${dateInfo.count === 1 ? 'diver' : 'divers'}: ${diverList}
+                </li>
             `;
         });
+        emailHtml += `</ul>`;
 
         emailHtml += `
             <p style="margin-top: 20px;">
@@ -272,8 +273,8 @@ exports.testDigest = onRequest(
             const testThreshold = parseInt(req.query.threshold) || 1;
 
             if (!testEmail) {
-                return res.status(400).json({ 
-                    error: "Missing email parameter. Usage: ?email=YOUR_EMAIL&threshold=1" 
+                return res.status(400).json({
+                    error: "Missing email parameter. Usage: ?email=YOUR_EMAIL&threshold=1"
                 });
             }
 
@@ -281,9 +282,9 @@ exports.testDigest = onRequest(
             return res.status(200).json(result);
         } catch (error) {
             console.error("Error in test digest:", error);
-            return res.status(500).json({ 
-                success: false, 
-                error: error.message 
+            return res.status(500).json({
+                success: false,
+                error: error.message
             });
         }
     }
@@ -298,8 +299,8 @@ exports.handleTestDigest = async (req, res) => {
         const testThreshold = parseInt(req.query.threshold) || 1;
 
         if (!testEmail) {
-            return res.status(400).json({ 
-                error: "Missing email parameter. Usage: /api/test-digest?email=YOUR_EMAIL&threshold=1" 
+            return res.status(400).json({
+                error: "Missing email parameter. Usage: /api/test-digest?email=YOUR_EMAIL&threshold=1"
             });
         }
 
@@ -307,9 +308,9 @@ exports.handleTestDigest = async (req, res) => {
         return res.status(200).json(result);
     } catch (error) {
         console.error("Error in test digest:", error);
-        return res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        return res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 };

@@ -225,7 +225,7 @@ async function testDigest() {
         console.log(`Sending test email to ${testEmail}...`);
         await sgMail.send(msg);
         console.log("✅ Test email sent successfully!");
-        
+
     } catch (error) {
         console.error("❌ Error:", error);
         if (error.response) {
