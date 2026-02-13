@@ -21,7 +21,10 @@ exports.api = onRequest({
   const path = fullPath.split("/").filter((p: string) => p);
 
   // Route to appropriate handler
-  if (path[0] === "users") {
+  if (path[0] === "test-digest") {
+    // Test digest endpoint: GET /api/test-digest?email=YOUR_EMAIL&threshold=1
+    return scheduled.handleTestDigest(req, res);
+  } else if (path[0] === "users") {
     if (path[1] === "me") {
       return users.getMe(req, res);
     } else if (path[1] === "profile") {
@@ -67,3 +70,4 @@ exports.api = onRequest({
 
 // Export scheduled functions
 exports.dailyDigest = scheduled.dailyDigest;
+exports.testDigest = scheduled.testDigest;

@@ -19,7 +19,9 @@ if (fs.existsSync(envPath)) {
     });
 }
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin with default credentials
+// This will use your Firebase CLI auth
+process.env.GOOGLE_APPLICATION_CREDENTIALS = process.env.GOOGLE_APPLICATION_CREDENTIALS || "";
 admin.initializeApp({
     projectId: "boat-finder-sydney"
 });
