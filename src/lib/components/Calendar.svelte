@@ -317,6 +317,7 @@
       const weekEnd = new Date(currentWeekStart);
       weekEnd.setDate(currentWeekStart.getDate() + 6);
 
+      /** @type {Intl.DateTimeFormatOptions} */
       const settings = {
         day: "numeric",
         month: "short",
