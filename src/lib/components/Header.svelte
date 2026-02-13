@@ -58,9 +58,6 @@
       <a href="/">Calendar</a>
       <a href="/sites">Dive Sites</a>
       <a href="/profile">Profile</a>
-      {#if currentUser.isOperator}
-        <a href="/admin">Admin</a>
-      {/if}
       {#if currentUser.photoURL}
         <img
           src={currentUser.photoURL}
@@ -102,11 +99,6 @@
       <a href="/profile" onclick={closeMobileMenu} class="mobile-nav-item"
         >Profile</a
       >
-      {#if currentUser.isOperator}
-        <a href="/admin" onclick={closeMobileMenu} class="mobile-nav-item"
-          >Admin</a
-        >
-      {/if}
       <button
         onclick={() => {
           handleLogout();

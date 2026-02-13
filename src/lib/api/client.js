@@ -108,17 +108,3 @@ export const sitesApi = {
         });
     }
 };
-
-// Admin API
-export const adminApi = {
-    async promoteOperator(userId) {
-        return apiFetch('/adminapi/promote', {
-            method: 'POST',
-            body: JSON.stringify({ userId })
-        });
-    },
-
-    async getUsers() {
-        return apiFetch('/adminapi/users');
-    }
-};
