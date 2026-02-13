@@ -15,8 +15,8 @@
 
   // Computed filtered divers based on minDepth
   let divers = $derived(
-    minDepth 
-      ? allDivers.filter(diver => diver.maxDepth >= minDepth)
+    minDepth
+      ? allDivers.filter((diver) => diver.maxDepth >= minDepth)
       : allDivers
   );
 
