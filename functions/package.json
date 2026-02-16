@@ -3,6 +3,7 @@
   "scripts": {
     "genkit:start": "genkit start -- tsx --watch src/genkit-sample.ts",
     "lint": "eslint --ext .js,.ts .",
+    "verify:runtime-sync": "node scripts/verify-runtime-sync.js",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@dataconnect/admin-generated": "file:src/dataconnect-admin-generated",
+    "@google-cloud/firestore": "^7.11.6",
     "@sendgrid/mail": "^8.1.4",
     "express": "^5.2.1",
     "firebase-admin": "^13.6.0",

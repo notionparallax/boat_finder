@@ -41,6 +41,9 @@
   "functions": [
     {
       "codebase": "default",
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run verify:runtime-sync"
+      ],
       "disallowLegacyRuntimeConfig": true,
       "ignore": [
         "node_modules",

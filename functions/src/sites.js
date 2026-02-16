@@ -4,6 +4,96 @@ const admin = require("firebase-admin");
 
 const db = getFirestore();
 
+const SITE_NAME_REGEX = /^[A-Za-z0-9À-ÖØ-öø-ÿ'&(),./+\-\s]+$/;
+
+function validationError(res, message) {
+    return res.status(400).json({ success: false, error: message });
+}
+
+function sanitizeString(value) {
+    if (value === undefined || value === null) return "";
+    return String(value).trim();
+}
+
+function validateSiteId(siteId) {
+    const trimmed = sanitizeString(siteId);
+    if (!trimmed) {
+        return { error: "siteId is required" };
+    }
+    if (trimmed.length > 128) {
+        return { error: "siteId is invalid" };
+    }
+    return { value: trimmed };
+}
+
+function validateCreateSitePayload(body) {
+    const allowedKeys = ["name", "depth", "latitude", "longitude"];
+    const bodyKeys = Object.keys(body || {});
+    const unknownKeys = bodyKeys.filter((key) => !allowedKeys.includes(key));
+    if (unknownKeys.length > 0) {
+        return { error: `Unknown field(s): ${unknownKeys.join(", ")}` };
+    }
+
+    const name = sanitizeString(body.name);
+    if (!name) {
+        return { error: "name is required" };
+    }
+    if (name.length < 2 || name.length > 120) {
+        return { error: "name must be between 2 and 120 characters" };
+    }
+    if (!SITE_NAME_REGEX.test(name)) {
+        return { error: "name contains invalid characters" };
+    }
+
+    if (typeof body.depth !== "number") {
+        return { error: "depth must be a number" };
+    }
+
+    const depth = Number(body.depth);
+    if (!Number.isInteger(depth)) {
+        return { error: "depth must be an integer" };
+    }
+    if (depth < 1 || depth > 300) {
+        return { error: "depth must be between 1 and 300" };
+    }
+
+    const hasLatitude = body.latitude !== undefined && body.latitude !== null && body.latitude !== "";
+    const hasLongitude = body.longitude !== undefined && body.longitude !== null && body.longitude !== "";
+    if (hasLatitude !== hasLongitude) {
+        return { error: "latitude and longitude must both be provided" };
+    }
+
+    let latitude = null;
+    let longitude = null;
+    if (hasLatitude && hasLongitude) {
+        if (typeof body.latitude !== "number" || typeof body.longitude !== "number") {
+            return { error: "latitude and longitude must be numbers" };
+        }
+
+        latitude = Number(body.latitude);
+        longitude = Number(body.longitude);
+
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+            return { error: "latitude and longitude must be valid numbers" };
+        }
+        if (latitude < -90 || latitude > 90) {
+            return { error: "latitude must be between -90 and 90" };
+        }
+        if (longitude < -180 || longitude > 180) {
+            return { error: "longitude must be between -180 and 180" };
+        }
+    }
+
+    return {
+        value: {
+            name,
+            depth,
+            latitude,
+            longitude,
+        },
+    };
+}
+
 /**
  * Get all dive sites with user's interest flags
  */
@@ -58,7 +148,12 @@ exports.getSite = onRequest({ region: "australia-southeast1" }, async (req, res)
 
         await admin.auth().verifyIdToken(authHeader.split("Bearer ")[1]);
 
-        const siteId = req.query.siteId || req.params.siteId;
+        const validatedSiteId = validateSiteId(req.query.siteId || req.params.siteId);
+        if (validatedSiteId.error) {
+            return validationError(res, validatedSiteId.error);
+        }
+
+        const siteId = validatedSiteId.value;
 
         const siteDoc = await db.collection("diveSites").doc(siteId).get();
 
@@ -88,7 +183,12 @@ exports.getSiteDivers = onRequest({ region: "australia-southeast1" }, async (req
 
         await admin.auth().verifyIdToken(authHeader.split("Bearer ")[1]);
 
-        const siteId = req.query.siteId || req.params.siteId;
+        const validatedSiteId = validateSiteId(req.query.siteId || req.params.siteId);
+        if (validatedSiteId.error) {
+            return validationError(res, validatedSiteId.error);
+        }
+
+        const siteId = validatedSiteId.value;
 
         // Get all users interested in this site
         const interestsSnapshot = await db.collection("siteInterest")
@@ -139,15 +239,16 @@ exports.createSite = onRequest({ region: "australia-southeast1" }, async (req, r
         const decodedToken = await admin.auth().verifyIdToken(token);
         const userId = decodedToken.uid;
 
-        const { name, depth, latitude, longitude } = req.body;
-
-        if (!name || !depth) {
-            return res.status(400).json({ error: "name and depth are required" });
+        const validatedPayload = validateCreateSitePayload(req.body || {});
+        if (validatedPayload.error) {
+            return validationError(res, validatedPayload.error);
         }
+
+        const { name, depth, latitude, longitude } = validatedPayload.value;
 
         // Check if site with same name exists (case-insensitive)
         const existingSnapshot = await db.collection("diveSites")
-            .where("nameLower", "==", name.trim().toLowerCase())
+            .where("nameLower", "==", name.toLowerCase())
             .get();
 
         if (!existingSnapshot.empty) {
@@ -155,11 +256,11 @@ exports.createSite = onRequest({ region: "australia-southeast1" }, async (req, r
         }
 
         const siteData = {
-            name: name.trim(),
-            nameLower: name.trim().toLowerCase(),
-            depth: parseInt(depth),
-            latitude: latitude ? parseFloat(latitude) : null,
-            longitude: longitude ? parseFloat(longitude) : null,
+            name,
+            nameLower: name.toLowerCase(),
+            depth,
+            latitude,
+            longitude,
             createdBy: userId,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
         };
@@ -181,12 +282,6 @@ exports.createSite = onRequest({ region: "australia-southeast1" }, async (req, r
  */
 exports.deleteSite = onRequest({ region: "australia-southeast1" }, async (req, res) => {
     try {
-        console.log("=== DELETE SITE CALLED ===");
-        console.log("Method:", req.method);
-        console.log("Path:", req.path);
-        console.log("Params:", req.params);
-        console.log("Body:", req.body);
-
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({ error: "Unauthorized" });
@@ -196,8 +291,12 @@ exports.deleteSite = onRequest({ region: "australia-southeast1" }, async (req, r
         const decodedToken = await admin.auth().verifyIdToken(token);
         const userId = decodedToken.uid;
 
-        const siteId = req.body.siteId || req.params.siteId;
-        console.log("Site ID to delete:", siteId);
+        const validatedSiteId = validateSiteId(req.body?.siteId || req.params.siteId);
+        if (validatedSiteId.error) {
+            return validationError(res, validatedSiteId.error);
+        }
+
+        const siteId = validatedSiteId.value;
 
         // Get the site
         const siteDoc = await db.collection("diveSites").doc(siteId).get();
@@ -213,12 +312,9 @@ exports.deleteSite = onRequest({ region: "australia-southeast1" }, async (req, r
         }
 
         // Delete the site
-        console.log("Deleting site from Firestore...");
         await db.collection("diveSites").doc(siteId).delete();
-        console.log("Site deleted from Firestore");
 
         // Delete all interest records for this site
-        console.log("Deleting interest records...");
         const interestSnapshot = await db.collection("siteInterest")
             .where("siteId", "==", siteId)
             .get();
@@ -228,9 +324,6 @@ exports.deleteSite = onRequest({ region: "australia-southeast1" }, async (req, r
             batch.delete(doc.ref);
         });
         await batch.commit();
-        console.log("Interest records deleted");
-
-        console.log("=== DELETE SUCCESSFUL ===");
         return res.status(200).json({ success: true, data: { siteId } });
     } catch (error) {
         console.error("Error in deleteSite:", error);
@@ -252,7 +345,12 @@ exports.toggleSiteInterest = onRequest({ region: "australia-southeast1" }, async
         const decodedToken = await admin.auth().verifyIdToken(token);
         const userId = decodedToken.uid;
 
-        const siteId = req.body.siteId || req.params.siteId;
+        const validatedSiteId = validateSiteId(req.body?.siteId || req.params.siteId);
+        if (validatedSiteId.error) {
+            return validationError(res, validatedSiteId.error);
+        }
+
+        const siteId = validatedSiteId.value;
 
         // Verify site exists
         const siteDoc = await db.collection("diveSites").doc(siteId).get();
