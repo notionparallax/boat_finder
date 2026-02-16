@@ -19,6 +19,59 @@
   let saving = $state(false);
   let depthTouched = $state(false);
 
+  const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ'\-\s]+$/;
+
+  function normalizePhoneForValidation(phone) {
+    return String(phone || "").trim().replace(/[\s()-]/g, "");
+  }
+
+  function validateProfileInput() {
+    const firstName = String(profile.firstName || "").trim();
+    const lastName = String(profile.lastName || "").trim();
+    const certLevel = String(profile.certLevel || "").trim();
+    const phoneNormalized = normalizePhoneForValidation(profile.phone);
+    const maxDepth = Number(profile.maxDepth);
+
+    if (!firstName || firstName.length < 2 || firstName.length > 80) {
+      return "First name must be between 2 and 80 characters.";
+    }
+    if (!NAME_REGEX.test(firstName)) {
+      return "First name contains invalid characters.";
+    }
+
+    if (!lastName || lastName.length < 2 || lastName.length > 80) {
+      return "Last name must be between 2 and 80 characters.";
+    }
+    if (!NAME_REGEX.test(lastName)) {
+      return "Last name contains invalid characters.";
+    }
+
+    if (!certLevel || certLevel.length < 2 || certLevel.length > 100) {
+      return "Certification level must be between 2 and 100 characters.";
+    }
+
+    const validAuMobile =
+      /^04\d{8}$/.test(phoneNormalized) ||
+      /^\+614\d{8}$/.test(phoneNormalized) ||
+      /^614\d{8}$/.test(phoneNormalized);
+    if (!validAuMobile) {
+      return "Phone must be a valid Australian mobile number (e.g. 04XXXXXXXX).";
+    }
+
+    if (!Number.isInteger(maxDepth) || maxDepth < 10 || maxDepth > 300) {
+      return "Maximum depth must be an integer between 10 and 300.";
+    }
+
+    if ($user?.isOperator && profile.operatorNotificationThreshold !== null) {
+      const threshold = Number(profile.operatorNotificationThreshold);
+      if (!Number.isInteger(threshold) || threshold < 0 || threshold > 50) {
+        return "Notification threshold must be an integer between 0 and 50.";
+      }
+    }
+
+    return null;
+  }
+
   onMount(() => {
     if ($user) {
       profile = {
@@ -36,6 +89,13 @@
   async function handleSubmit(e) {
     e.preventDefault();
     depthTouched = true;
+
+    const validationError = validateProfileInput();
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
     saving = true;
     try {
       await userApi.updateProfile(profile);
@@ -124,7 +184,7 @@
           type="number"
           bind:value={profile.maxDepth}
           min="10"
-          max="150"
+          max="300"
           required
           onblur={() => (depthTouched = true)}
         />
@@ -145,7 +205,7 @@
             id="notificationThreshold"
             type="number"
             bind:value={profile.operatorNotificationThreshold}
-            min="1"
+            min="0"
             max="50"
             placeholder="Notify when X divers are interested"
           />

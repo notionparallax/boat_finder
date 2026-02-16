@@ -32,6 +32,8 @@
   let markers = {};
   let mapBounds = $state(null);
 
+  const SITE_NAME_REGEX = /^[A-Za-z0-9À-ÖØ-öø-ÿ'&(),./+\-\s]+$/;
+
   // Filter sites based on map bounds
   let visibleSites = $derived(
     sites.filter((site) => {
@@ -120,18 +122,10 @@
       }
 
       const allSites = await sitesApi.getAll();
-      // Load divers for each site
-      sites = await Promise.all(
-        allSites.map(async (site) => {
-          try {
-            const divers = await sitesApi.getDivers(site.siteId);
-            return { ...site, interestedDivers: divers };
-          } catch (error) {
-            console.error(`Failed to load divers for ${site.name}:`, error);
-            return { ...site, interestedDivers: [] };
-          }
-        })
-      );
+      sites = allSites.map((site) => ({
+        ...site,
+        interestedDivers: site.interestedDivers || [],
+      }));
 
       // Cache the data
       setCachedSites(sites);
@@ -159,7 +153,9 @@
           (d) => d.userId === $user?.uid
         );
 
-        const marker = L.marker([site.latitude, site.longitude])
+        const marker = L.marker([site.latitude, site.longitude], {
+          keyboard: false,
+        })
           .bindTooltip(site.name, {
             permanent: false,
             direction: "top",
@@ -175,6 +171,7 @@
               ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong><br>` : "<em>No divers interested yet</em><br>"}
               <button 
                 onclick="window.toggleSiteInterest('${site.siteId}')"
+                aria-label="${isInterested ? `Remove interest in ${site.name}` : `Mark interest in ${site.name}`}" 
                 style="
                   margin-top: 8px;
                   padding: 6px 12px;
@@ -269,6 +266,7 @@
           ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong><br>` : "<em>No divers interested yet</em><br>"}
           <button 
             onclick="window.toggleSiteInterest('${site.siteId}')"
+            aria-label="${isInterested ? `Remove interest in ${site.name}` : `Mark interest in ${site.name}`}" 
             style="
               margin-top: 8px;
               padding: 6px 12px;
@@ -358,15 +356,51 @@
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await sitesApi.createSite({
-      name: newSite.name,
-      depth: parseFloat(newSite.depth),
-      latitude: parseFloat(newSite.latitude),
-      longitude: parseFloat(newSite.longitude),
-    });
-    newSite = { name: "", depth: "", latitude: "", longitude: "" };
-    showAddForm = false;
-    await loadSites();
+
+    const name = String(newSite.name || "").trim();
+    const depth = Number(newSite.depth);
+    const latitude = Number(newSite.latitude);
+    const longitude = Number(newSite.longitude);
+
+    if (!name || name.length < 2 || name.length > 120) {
+      toast.error("Site name must be between 2 and 120 characters.");
+      return;
+    }
+
+    if (!SITE_NAME_REGEX.test(name)) {
+      toast.error("Site name contains invalid characters.");
+      return;
+    }
+
+    if (!Number.isInteger(depth) || depth < 1 || depth > 300) {
+      toast.error("Depth must be an integer between 1 and 300.");
+      return;
+    }
+
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+      toast.error("Latitude must be between -90 and 90.");
+      return;
+    }
+
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      toast.error("Longitude must be between -180 and 180.");
+      return;
+    }
+
+    try {
+      await sitesApi.createSite({
+        name,
+        depth,
+        latitude,
+        longitude,
+      });
+      newSite = { name: "", depth: "", latitude: "", longitude: "" };
+      showAddForm = false;
+      await loadSites();
+      toast.success("Site added successfully!");
+    } catch (error) {
+      toast.error(`Failed to add site: ${error.message || "Unknown error"}`);
+    }
   }
 </script>
 
@@ -398,6 +432,9 @@
           type="number"
           bind:value={newSite.depth}
           placeholder="Depth (m)"
+          min="1"
+          max="300"
+          step="1"
           required
         />
         <input
@@ -441,6 +478,9 @@
                 class="interest-button"
                 class:interested={site.isInterested}
                 onclick={() => toggleInterest(site.siteId)}
+                aria-label={site.isInterested
+                  ? `Remove from my interested sites for ${site.name}`
+                  : `Add ${site.name} to my interested sites`}
                 title={site.isInterested
                   ? "Remove from my interested sites"
                   : "Add to my interested sites"}
@@ -451,6 +491,7 @@
                 <button
                   class="delete-button"
                   onclick={() => deleteSite(site.siteId, site.name)}
+                  aria-label={`Delete site ${site.name}`}
                   title="Delete this site"
                 >
                   <Trash2 size={16} />
@@ -498,6 +539,9 @@
                   class="interest-button"
                   class:interested={site.isInterested}
                   onclick={() => toggleInterest(site.siteId)}
+                  aria-label={site.isInterested
+                    ? `Remove from my interested sites for ${site.name}`
+                    : `Add ${site.name} to my interested sites`}
                   title={site.isInterested
                     ? "Remove from my interested sites"
                     : "Add to my interested sites"}
@@ -508,6 +552,7 @@
                   <button
                     class="delete-button"
                     onclick={() => deleteSite(site.siteId, site.name)}
+                    aria-label={`Delete site ${site.name}`}
                     title="Delete this site"
                   >
                     <Trash2 size={16} />
