@@ -17,6 +17,10 @@ app.http('getAllSites', {
                 .query('SELECT * FROM c ORDER BY c.name ASC')
                 .fetchAll();
 
+            if (sites.length === 0) {
+                return createResponse(true, []);
+            }
+
             // Get user's interests
             const { resources: userInterests } = await siteInterestContainer.items
                 .query({
@@ -27,10 +31,65 @@ app.http('getAllSites', {
 
             const interestedSiteIds = new Set(userInterests.map(i => i.siteId));
 
+            const siteIds = sites.map(site => site.siteId);
+
+            // Get all interests for the returned sites in one query
+            const { resources: siteInterests } = await siteInterestContainer.items
+                .query({
+                    query: `
+                        SELECT c.siteId, c.userId
+                        FROM c
+                        WHERE ARRAY_CONTAINS(@siteIds, c.siteId)
+                    `,
+                    parameters: [{ name: '@siteIds', value: siteIds }]
+                })
+                .fetchAll();
+
+            const uniqueUserIds = [...new Set(siteInterests.map(interest => interest.userId))];
+
+            let usersById = new Map();
+            if (uniqueUserIds.length > 0) {
+                const { resources: users } = await usersContainer.items
+                    .query({
+                        query: `
+                            SELECT c.userId, c.firstName, c.lastName, c.maxDepth, c.photoURL
+                            FROM c
+                            WHERE ARRAY_CONTAINS(@userIds, c.userId)
+                        `,
+                        parameters: [{ name: '@userIds', value: uniqueUserIds }]
+                    })
+                    .fetchAll();
+
+                usersById = new Map(
+                    users.map(user => [
+                        user.userId,
+                        {
+                            ...user,
+                            displayName: `${user.firstName || ''} ${user.lastName || ''}`.trim()
+                        }
+                    ])
+                );
+            }
+
+            const siteDiversMap = new Map();
+            for (const interest of siteInterests) {
+                const diver = usersById.get(interest.userId);
+                if (!diver) continue;
+
+                if (!siteDiversMap.has(interest.siteId)) {
+                    siteDiversMap.set(interest.siteId, []);
+                }
+
+                siteDiversMap.get(interest.siteId).push(diver);
+            }
+
             // Add isInterested flag to each site
             const sitesWithInterest = sites.map(site => ({
                 ...site,
-                isInterested: interestedSiteIds.has(site.siteId)
+                isInterested: interestedSiteIds.has(site.siteId),
+                interestedDivers: (siteDiversMap.get(site.siteId) || [])
+                    .slice()
+                    .sort((a, b) => (b.maxDepth || 0) - (a.maxDepth || 0))
             }));
 
             return createResponse(true, sitesWithInterest);
