@@ -31,6 +31,10 @@
   let showModal = $state(false);
   let isOperator = $state(false);
   let currentWeekStart = $state(new Date());
+  let pollIntervalId = $state(null);
+  let pollInFlight = $state(false);
+
+  const POLL_INTERVAL_MS = 30_000;
 
   // Use viewport store for mobile detection
   $effect(() => {
@@ -44,9 +48,140 @@
     isOperator = $user?.isOperator || false;
   });
 
-  onMount(async () => {
-    await loadData();
+  onMount(() => {
+    (async () => {
+      await loadData();
+      startPolling();
+    })();
+
+    const handleFocus = () => {
+      pollForUpdates();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        pollForUpdates();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      stopPolling();
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   });
+
+  function toDataMap(calendar) {
+    const dataMap = {};
+    for (const [date, divers] of Object.entries(calendar || {})) {
+      dataMap[date] = {
+        date,
+        divers,
+        count: divers.length,
+      };
+    }
+
+    return dataMap;
+  }
+
+  async function fetchCalendarPayload() {
+    const { startDate, endDate } = getCalendarDateRange();
+    const [calendar, dates] = await Promise.all([
+      availabilityApi.getCalendar(startDate, endDate),
+      availabilityApi.getMyDates(startDate, endDate),
+    ]);
+
+    return {
+      availabilityData: toDataMap(calendar),
+      myDates: dates || [],
+    };
+  }
+
+  function normalizeCalendarForCompare(data) {
+    const sortedDates = Object.keys(data)
+      .sort()
+      .map((date) => ({
+        date,
+        divers: (data[date]?.divers || [])
+          .map((diver) => ({
+            userId: diver.userId || "",
+            firstName: diver.firstName || "",
+            lastName: diver.lastName || "",
+            displayName: diver.displayName || "",
+            maxDepth: diver.maxDepth || 0,
+            photoURL: diver.photoURL || "",
+          }))
+          .sort((a, b) => a.userId.localeCompare(b.userId)),
+      }));
+
+    return JSON.stringify(sortedDates);
+  }
+
+  function hasChanged(nextAvailabilityData, nextMyDates) {
+    const currentAvailability = normalizeCalendarForCompare(availabilityData);
+    const nextAvailability = normalizeCalendarForCompare(nextAvailabilityData);
+
+    if (currentAvailability !== nextAvailability) {
+      return true;
+    }
+
+    const currentDates = Array.from(myDates).sort().join("|");
+    const nextDates = [...nextMyDates].sort().join("|");
+
+    return currentDates !== nextDates;
+  }
+
+  function applyCalendarState(nextAvailabilityData, nextMyDates) {
+    availabilityData = nextAvailabilityData;
+    myDates = new Set(nextMyDates);
+
+    setCachedCalendar({
+      availabilityData: nextAvailabilityData,
+      myDates: nextMyDates,
+    });
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollIntervalId = setInterval(() => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
+      pollForUpdates();
+    }, POLL_INTERVAL_MS);
+  }
+
+  function stopPolling() {
+    if (pollIntervalId) {
+      clearInterval(pollIntervalId);
+      pollIntervalId = null;
+    }
+  }
+
+  async function pollForUpdates() {
+    if (!$user || pollInFlight) {
+      return;
+    }
+
+    pollInFlight = true;
+
+    try {
+      const next = await fetchCalendarPayload();
+
+      if (hasChanged(next.availabilityData, next.myDates)) {
+        logger.log("Calendar updated from background poll");
+        applyCalendarState(next.availabilityData, next.myDates);
+      }
+    } catch (error) {
+      logger.error("Calendar background poll failed:", error);
+    } finally {
+      pollInFlight = false;
+    }
+  }
 
   async function loadData() {
     // Try to use cached data first
@@ -57,27 +192,8 @@
       return;
     }
 
-    // Always fetch 3 months from today
-    const { startDate, endDate } = getCalendarDateRange();
-    const [calendar, dates] = await Promise.all([
-      availabilityApi.getCalendar(startDate, endDate),
-      availabilityApi.getMyDates(startDate, endDate),
-    ]);
-
-    // Transform calendar object to expected format
-    const dataMap = {};
-    for (const [date, divers] of Object.entries(calendar || {})) {
-      dataMap[date] = {
-        date: date,
-        divers: divers,
-        count: divers.length,
-      };
-    }
-    availabilityData = dataMap;
-    myDates = new Set(dates || []);
-
-    // Cache the data
-    setCachedCalendar({ availabilityData: dataMap, myDates: dates || [] });
+    const fresh = await fetchCalendarPayload();
+    applyCalendarState(fresh.availabilityData, fresh.myDates);
   }
 
   async function handleDayClick(date) {
@@ -334,6 +450,31 @@
       timeZone: "Australia/Sydney",
     });
   }
+
+  function getDayAriaLabel(day, dayData, isPast, isMyDay) {
+    const dateLabel = day.toLocaleDateString("en-AU", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Australia/Sydney",
+    });
+
+    if (isPast) {
+      return `${dateLabel}. Past date, unavailable.`;
+    }
+
+    const count = dayData?.count || 0;
+    const countLabel = `${count} diver${count === 1 ? "" : "s"} interested`;
+    const selectedLabel = isMyDay
+      ? "You are marked available"
+      : "You are not marked available";
+    const actionLabel = isMyDay
+      ? "Activate to remove your availability"
+      : "Activate to add your availability";
+
+    return `${dateLabel}. ${countLabel}. ${selectedLabel}. ${actionLabel}.`;
+  }
 </script>
 
 <div class="calendar-container">
@@ -385,6 +526,8 @@
             role="button"
             tabindex={isPast ? -1 : 0}
             aria-disabled={isPast}
+            aria-pressed={isPast ? undefined : isMyDay}
+            aria-label={getDayAriaLabel(day, dayData, isPast, isMyDay)}
           >
             <div class="mobile-day-content">
               <div class="mobile-day-header">
@@ -435,6 +578,8 @@
                 role="button"
                 tabindex={isPast ? -1 : 0}
                 aria-disabled={isPast}
+                aria-pressed={isPast ? undefined : isMyDay}
+                aria-label={getDayAriaLabel(day, dayData, isPast, isMyDay)}
               >
                 <div class="day-header">
                   <span class="day-number">{day.getDate()}</span>

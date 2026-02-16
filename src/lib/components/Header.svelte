@@ -47,6 +47,8 @@
       class="mobile-menu-button"
       onclick={toggleMobileMenu}
       aria-label="Menu"
+      aria-expanded={mobileMenuOpen}
+      aria-controls="mobile-nav"
     >
       {#if mobileMenuOpen}
         <X size={24} />
@@ -84,12 +86,10 @@
     <div
       class="mobile-menu-overlay"
       onclick={closeMobileMenu}
-      onkeydown={(e) => e.key === "Escape" && closeMobileMenu()}
-      role="button"
-      tabindex="-1"
-      aria-label="Close menu"
+      role="presentation"
+      aria-hidden="true"
     ></div>
-    <nav class="mobile-nav">
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation">
       {#if onAddClick}
         <button
           onclick={() => {
