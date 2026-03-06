@@ -289,3 +289,66 @@ app.http('toggleSiteInterest', {
         }
     }
 });
+
+app.http('deleteSite', {
+    methods: ['DELETE'],
+    authLevel: 'anonymous',
+    route: 'sites/{siteId}',
+    handler: async (request, context) => {
+        try {
+            const authUser = getUserFromRequest(request);
+            if (!authUser) {
+                return { status: 401, jsonBody: { error: 'Unauthorized' } };
+            }
+
+            const siteId = request.params.siteId;
+
+            // Verify site exists
+            const { resources: sites } = await sitesContainer.items
+                .query({
+                    query: 'SELECT * FROM c WHERE c.siteId = @siteId',
+                    parameters: [{ name: '@siteId', value: siteId }]
+                })
+                .fetchAll();
+
+            if (sites.length === 0) {
+                return { status: 404, jsonBody: { error: 'Site not found' } };
+            }
+
+            const site = sites[0];
+
+            // Only allow the creator or an operator to delete
+            const { resources: currentUser } = await usersContainer.items
+                .query({
+                    query: 'SELECT c.isOperator FROM c WHERE c.userId = @userId',
+                    parameters: [{ name: '@userId', value: authUser.userId }]
+                })
+                .fetchAll();
+
+            const isOperator = currentUser.length > 0 && currentUser[0].isOperator;
+            if (site.createdBy !== authUser.userId && !isOperator) {
+                return { status: 403, jsonBody: { error: 'Only the creator or an operator can delete a site' } };
+            }
+
+            // Delete all interest records for this site
+            const { resources: interests } = await siteInterestContainer.items
+                .query({
+                    query: 'SELECT * FROM c WHERE c.siteId = @siteId',
+                    parameters: [{ name: '@siteId', value: siteId }]
+                })
+                .fetchAll();
+
+            for (const interest of interests) {
+                await siteInterestContainer.item(interest.id, siteId).delete();
+            }
+
+            // Delete the site
+            await sitesContainer.item(site.id, site.siteId).delete();
+
+            return createResponse(true, { deleted: true, siteId });
+        } catch (error) {
+            context.error('Error in deleteSite:', error);
+            return createResponse(false, null, error.message);
+        }
+    }
+});

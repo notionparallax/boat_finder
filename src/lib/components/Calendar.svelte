@@ -351,10 +351,8 @@
       );
 
       // Only allow if previous month is not before current month
-      if (
-        prevMonthDate.getMonth() >= today.getMonth() ||
-        prevMonthDate.getFullYear() > today.getFullYear()
-      ) {
+      const currentMonth = new Date(today.getFullYear(), today.getMonth());
+      if (prevMonthDate >= currentMonth) {
         currentDate = prevMonthDate;
         loadData();
       }
@@ -375,10 +373,8 @@
       currentDate.getMonth() - 1
     );
 
-    return (
-      prevMonthDate.getMonth() >= today.getMonth() &&
-      prevMonthDate.getFullYear() >= today.getFullYear()
-    );
+    const currentMonth = new Date(today.getFullYear(), today.getMonth());
+    return prevMonthDate >= currentMonth;
   }
 
   function nextMonth() {
@@ -512,7 +508,7 @@
             count: 0,
           }}
           {@const isMyDay = myDates.has(dateStr)}
-          {@const isPast = day < new Date()}
+          {@const isPast = formatDateISO(day) < formatDateISO(new Date())}
 
           <div
             class="day-cell mobile-day"
@@ -564,7 +560,7 @@
                 count: 0,
               }}
               {@const isMyDay = myDates.has(dateStr)}
-              {@const isPast = day < new Date()}
+              {@const isPast = formatDateISO(day) < formatDateISO(new Date())}
 
               <div
                 class="day-cell"

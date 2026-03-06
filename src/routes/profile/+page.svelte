@@ -22,7 +22,9 @@
   const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ'\-\s]+$/;
 
   function normalizePhoneForValidation(phone) {
-    return String(phone || "").trim().replace(/[\s()-]/g, "");
+    return String(phone || "")
+      .trim()
+      .replace(/[\s()-]/g, "");
   }
 
   function validateProfileInput() {

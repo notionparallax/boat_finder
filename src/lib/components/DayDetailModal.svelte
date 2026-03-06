@@ -117,9 +117,9 @@
           {#each divers as diver}
             <div class="diver-row">
               <div class="diver-info">
-                {#if diver.photoUrl}
+                {#if diver.photoURL}
                   <img
-                    src={diver.photoUrl}
+                    src={diver.photoURL}
                     alt={diver.firstName}
                     class="avatar"
                   />

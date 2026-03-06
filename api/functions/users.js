@@ -90,6 +90,8 @@ app.http('updateProfile', {
             } else {
                 // Update existing user
                 user = resources[0];
+                user.firstName = body.firstName || user.firstName;
+                user.lastName = body.lastName || user.lastName;
                 user.phone = body.phone || user.phone;
                 user.certLevel = body.certLevel || user.certLevel;
                 user.maxDepth = body.maxDepth || user.maxDepth;

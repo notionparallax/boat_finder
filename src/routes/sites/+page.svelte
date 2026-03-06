@@ -3,7 +3,6 @@
   import { sitesApi } from "$lib/api/client.js";
   import DiverPill from "$lib/components/DiverPill.svelte";
   import Header from "$lib/components/Header.svelte";
-  import { db } from "$lib/firebase.js";
   import { user } from "$lib/stores/auth.js";
   import {
     getCachedSites,
@@ -12,15 +11,6 @@
   } from "$lib/stores/dataCache.js";
   import { toast } from "$lib/stores/toast";
   import { logger } from "$lib/utils/logger";
-  import {
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    query,
-    where,
-    writeBatch,
-  } from "firebase/firestore";
   import { MapPin, Trash2 } from "lucide-svelte";
   import { onMount } from "svelte";
 
@@ -150,7 +140,7 @@
     sites.forEach((site) => {
       if (site.latitude && site.longitude) {
         const isInterested = site.interestedDivers?.some(
-          (d) => d.userId === $user?.uid
+          (d) => d.userId === $user?.userId
         );
 
         const marker = L.marker([site.latitude, site.longitude], {
@@ -223,21 +213,21 @@
 
     const site = sites[siteIndex];
     const wasInterested = site.interestedDivers?.some(
-      (d) => d.userId === $user?.uid
+      (d) => d.userId === $user?.userId
     );
     const previousDivers = [...(site.interestedDivers || [])];
 
     if (wasInterested) {
       // Remove current user from the list
       sites[siteIndex].interestedDivers = site.interestedDivers.filter(
-        (d) => d.userId !== $user?.uid
+        (d) => d.userId !== $user?.userId
       );
     } else {
       // Add current user to the list with full profile data
       sites[siteIndex].interestedDivers = [
         ...(site.interestedDivers || []),
         {
-          userId: $user?.uid,
+          userId: $user?.userId,
           firstName: $user?.firstName,
           lastName: $user?.lastName,
           displayName:
@@ -253,7 +243,7 @@
     if (marker && map) {
       const site = sites[siteIndex];
       const isInterested = site.interestedDivers?.some(
-        (d) => d.userId === $user?.uid
+        (d) => d.userId === $user?.userId
       );
 
       marker.setPopupContent(
@@ -322,32 +312,9 @@
     }
 
     try {
-      logger.log("Deleting site directly from Firestore:", siteId);
-
-      // Delete the site document
-      await deleteDoc(doc(db, "diveSites", siteId));
-      logger.log("Site deleted from Firestore");
-
-      // Delete all interest records for this site
-      const interestQuery = query(
-        collection(db, "siteInterest"),
-        where("siteId", "==", siteId)
-      );
-      const interestSnapshot = await getDocs(interestQuery);
-
-      if (!interestSnapshot.empty) {
-        const batch = writeBatch(db);
-        interestSnapshot.docs.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-        logger.log("Interest records deleted");
-      }
-
-      // Reload sites to update the list
-      logger.log("Reloading sites after delete...");
+      await sitesApi.deleteSite(siteId);
+      invalidateSitesCache();
       await loadSites();
-      logger.log("Sites reloaded");
     } catch (error) {
       logger.error("Failed to delete site:", error);
       toast.error("Failed to delete site: " + error.message);
