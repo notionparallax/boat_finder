@@ -60,8 +60,8 @@ export function getMonthGrid(year, month) {
 
     // Get all days from the start of the week containing the first day
     // to the end of the week containing the last day
-    const start = startOfWeek(firstDay, { weekStartsOn: 0 }); // Sunday
-    const end = endOfWeek(lastDay, { weekStartsOn: 0 });
+    const start = startOfWeek(firstDay, { weekStartsOn: 1 }); // Monday
+    const end = endOfWeek(lastDay, { weekStartsOn: 1 });
 
     const allDays = eachDayOfInterval({ start, end });
 
