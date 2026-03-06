@@ -20,12 +20,21 @@
   let mapContainer = $state(null);
   let map;
   let markers = {};
+  let mapBounds = $state(null);
 
   const SITE_NAME_REGEX = /^[A-Za-z0-9À-ÖØ-öø-ÿ'&(),./+\-\s]+$/;
 
+  // Filter sites based on map bounds
+  let visibleSites = $derived(
+    sites.filter((site) => {
+      if (!mapBounds || !site.latitude || !site.longitude) return true;
+      return mapBounds.contains([site.latitude, site.longitude]);
+    })
+  );
+
   // Separate sites with and without coordinates
   let sitesWithCoords = $derived(
-    sites.filter((site) => site.latitude && site.longitude)
+    visibleSites.filter((site) => site.latitude && site.longitude)
   );
 
   let sitesWithoutCoords = $derived(
@@ -67,6 +76,14 @@
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "© OpenStreetMap contributors",
         }).addTo(map);
+
+        // Update bounds when map moves or zooms
+        map.on("moveend", () => {
+          mapBounds = map.getBounds();
+        });
+
+        // Set initial bounds
+        mapBounds = map.getBounds();
       } catch (error) {
         console.error("Failed to initialize map:", error);
       }
