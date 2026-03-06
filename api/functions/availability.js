@@ -45,7 +45,7 @@ app.http('getCalendar', {
                 const { resources: userRecords } = await usersContainer.items
                     .query({
                         query: `
-							SELECT c.userId, c.firstName, c.lastName, c.maxDepth, c.phone 
+							SELECT c.userId, c.firstName, c.lastName, c.maxDepth, c.phone, c.photoURL 
 							FROM c 
 							WHERE ARRAY_CONTAINS(@userIds, c.userId)
 						`,
@@ -69,7 +69,8 @@ app.http('getCalendar', {
                         firstName: user.firstName,
                         lastName: user.lastName,
                         maxDepth: user.maxDepth,
-                        phone: user.phone
+                        phone: user.phone,
+                        photoURL: user.photoURL || ''
                     });
                 }
             }
@@ -125,7 +126,7 @@ app.http('getDayDetails', {
             const { resources: users } = await usersContainer.items
                 .query({
                     query: `
-						SELECT c.userId, c.firstName, c.lastName, c.email, c.phone, c.maxDepth, c.certLevel
+						SELECT c.userId, c.firstName, c.lastName, c.email, c.phone, c.maxDepth, c.certLevel, c.photoURL
 						FROM c 
 						WHERE ARRAY_CONTAINS(@userIds, c.userId)
 					`,
@@ -140,7 +141,8 @@ app.http('getDayDetails', {
                 email: user.email,
                 phone: user.phone,
                 maxDepth: user.maxDepth,
-                certLevel: user.certLevel
+                certLevel: user.certLevel,
+                photoURL: user.photoURL || ''
             }));
 
             return createResponse(true, { date, divers });
