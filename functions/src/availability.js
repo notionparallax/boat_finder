@@ -58,7 +58,6 @@ exports.getCalendar = onRequest({ region: "australia-southeast1" }, async (req, 
                     firstName: user.firstName,
                     lastName: user.lastName,
                     maxDepth: user.maxDepth,
-                    phone: user.phone,
                     photoURL: user.photoURL,
                 });
             }
@@ -67,7 +66,7 @@ exports.getCalendar = onRequest({ region: "australia-southeast1" }, async (req, 
         return res.status(200).json({ success: true, data: calendar });
     } catch (error) {
         console.error("Error in getCalendar:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -126,7 +125,7 @@ exports.getDayDetails = onRequest({ region: "australia-southeast1" }, async (req
         return res.status(200).json({ success: true, data: { date, divers } });
     } catch (error) {
         console.error("Error in getDayDetails:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -190,7 +189,7 @@ exports.toggleAvailability = onRequest({ region: "australia-southeast1" }, async
         }
     } catch (error) {
         console.error("Error in toggleAvailability:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -226,6 +225,6 @@ exports.getMyDates = onRequest({ region: "australia-southeast1" }, async (req, r
         return res.status(200).json({ success: true, data: dates });
     } catch (error) {
         console.error("Error in getMyDates:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });

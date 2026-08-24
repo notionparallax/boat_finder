@@ -4,6 +4,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const { defineSecret } = require("firebase-functions/params");
 const sgMail = require("@sendgrid/mail");
+const admin = require("firebase-admin");
 
 // Set default region for all functions
 setGlobalOptions({ region: "australia-southeast1" });
@@ -13,6 +14,43 @@ const sendgridApiKey = defineSecret("SENDGRID_API_KEY");
 const emailFrom = defineSecret("EMAIL_FROM");
 
 const db = getFirestore();
+
+/**
+ * Escape user-controlled strings before interpolating into digest email HTML
+ */
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+/**
+ * Verify the request carries a valid Firebase ID token for an operator account
+ */
+async function requireOperator(req) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return { error: "Unauthorized", status: 401 };
+    }
+
+    const token = authHeader.split("Bearer ")[1];
+    let decodedToken;
+    try {
+        decodedToken = await admin.auth().verifyIdToken(token);
+    } catch (error) {
+        return { error: "Unauthorized", status: 401 };
+    }
+
+    const userDoc = await db.collection("users").doc(decodedToken.uid).get();
+    if (!userDoc.exists || !userDoc.data().isOperator) {
+        return { error: "Forbidden", status: 403 };
+    }
+
+    return { uid: decodedToken.uid };
+}
 
 /**
  * Shared digest logic
@@ -160,7 +198,7 @@ async function sendDigestEmails(testEmail = null, testThreshold = null) {
         // Build email HTML
         let emailHtml = `
             <h2>🚢 Boat Finder Daily Digest</h2>
-            <p>Hi ${operator.firstName || "there"},</p>
+            <p>Hi ${escapeHtml(operator.firstName) || "there"},</p>
         `;
 
         // Section 1: New dates that crossed threshold today
@@ -171,7 +209,7 @@ async function sendDigestEmails(testEmail = null, testThreshold = null) {
             `;
             newDatesOverThreshold.forEach((dateInfo) => {
                 const diverList = dateInfo.divers
-                    .map((d) => `${d.firstName} ${d.lastName} (${d.maxDepth}m)`)
+                    .map((d) => `${escapeHtml(d.firstName)} ${escapeHtml(d.lastName)} (${d.maxDepth}m)`)
                     .join(", ");
                 emailHtml += `
                     <div style="margin: 15px 0; padding: 10px; background: #f0f8ff; border-left: 4px solid #0066cc;">
@@ -275,6 +313,11 @@ exports.testDigest = onRequest(
     },
     async (req, res) => {
         try {
+            const auth = await requireOperator(req);
+            if (auth.error) {
+                return res.status(auth.status).json({ error: auth.error });
+            }
+
             const testEmail = req.query.email;
             const testThreshold = parseInt(req.query.threshold) || 1;
 
@@ -290,7 +333,7 @@ exports.testDigest = onRequest(
             console.error("Error in test digest:", error);
             return res.status(500).json({
                 success: false,
-                error: error.message
+                error: "Internal server error"
             });
         }
     }
@@ -301,6 +344,11 @@ exports.testDigest = onRequest(
  */
 exports.handleTestDigest = async (req, res) => {
     try {
+        const auth = await requireOperator(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
+        }
+
         const testEmail = req.query.email;
         const testThreshold = parseInt(req.query.threshold) || 1;
 
@@ -316,7 +364,7 @@ exports.handleTestDigest = async (req, res) => {
         console.error("Error in test digest:", error);
         return res.status(500).json({
             success: false,
-            error: error.message
+            error: "Internal server error"
         });
     }
 };

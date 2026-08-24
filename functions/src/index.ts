@@ -58,6 +58,10 @@ exports.api = onRequest({
       // POST /sites/{siteId}/interest
       req.params.siteId = path[1];
       return sites.toggleSiteInterest(req, res);
+    } else if (req.method === "DELETE") {
+      // DELETE /sites/{siteId}
+      req.params.siteId = path[1];
+      return sites.deleteSite(req, res);
     } else {
       // GET /sites/{siteId}
       req.params.siteId = path[1];

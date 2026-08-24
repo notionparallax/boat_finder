@@ -132,7 +132,7 @@ exports.getAllSites = onRequest({ region: "australia-southeast1" }, async (req, 
         return res.status(200).json({ success: true, data: sites });
     } catch (error) {
         console.error("Error in getAllSites:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -167,7 +167,7 @@ exports.getSite = onRequest({ region: "australia-southeast1" }, async (req, res)
         });
     } catch (error) {
         console.error("Error in getSite:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -221,7 +221,7 @@ exports.getSiteDivers = onRequest({ region: "australia-southeast1" }, async (req
         return res.status(200).json({ success: true, data: users });
     } catch (error) {
         console.error("Error in getSiteDivers:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -273,7 +273,7 @@ exports.createSite = onRequest({ region: "australia-southeast1" }, async (req, r
         });
     } catch (error) {
         console.error("Error in createSite:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -327,7 +327,7 @@ exports.deleteSite = onRequest({ region: "australia-southeast1" }, async (req, r
         return res.status(200).json({ success: true, data: { siteId } });
     } catch (error) {
         console.error("Error in deleteSite:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -378,6 +378,6 @@ exports.toggleSiteInterest = onRequest({ region: "australia-southeast1" }, async
         }
     } catch (error) {
         console.error("Error in toggleSiteInterest:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });

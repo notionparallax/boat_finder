@@ -21,8 +21,19 @@
   let map;
   let markers = {};
   let mapBounds = $state(null);
+  let togglingSites = $state(new Set());
+  let submittingSite = $state(false);
 
   const SITE_NAME_REGEX = /^[A-Za-z0-9À-ÖØ-öø-ÿ'&(),./+\-\s]+$/;
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
 
   // Filter sites based on map bounds
   let visibleSites = $derived(
@@ -154,14 +165,14 @@
           .bindPopup(
             `
             <div style="min-width: 200px;">
-              <strong style="font-size: 1.1em;">${site.name}</strong><br>
+              <strong style="font-size: 1.1em;">${escapeHtml(site.name)}</strong><br>
               <strong>Depth:</strong> ${site.depth}m<br>
-              ${site.type ? `<strong>Type:</strong> ${site.type}<br>` : ""}
-              ${site.description ? `<strong>Description:</strong> ${site.description}<br>` : ""}
+              ${site.type ? `<strong>Type:</strong> ${escapeHtml(site.type)}<br>` : ""}
+              ${site.description ? `<strong>Description:</strong> ${escapeHtml(site.description)}<br>` : ""}
               ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong><br>` : "<em>No divers interested yet</em><br>"}
-              <button 
+              <button
                 onclick="window.toggleSiteInterest('${site.siteId}')"
-                aria-label="${isInterested ? `Remove interest in ${site.name}` : `Mark interest in ${site.name}`}" 
+                aria-label="${isInterested ? `Remove interest in ${escapeHtml(site.name)}` : `Mark interest in ${escapeHtml(site.name)}`}"
                 style="
                   margin-top: 8px;
                   padding: 6px 12px;
@@ -207,9 +218,18 @@
   }
 
   async function toggleInterest(siteId) {
+    // Prevent duplicate in-flight requests from rapid double-clicks
+    if (togglingSites.has(siteId)) return;
+    togglingSites.add(siteId);
+    togglingSites = togglingSites;
+
     // Optimistic update: Update UI immediately
     const siteIndex = sites.findIndex((s) => s.siteId === siteId);
-    if (siteIndex === -1) return;
+    if (siteIndex === -1) {
+      togglingSites.delete(siteId);
+      togglingSites = togglingSites;
+      return;
+    }
 
     const site = sites[siteIndex];
     const wasInterested = site.interestedDivers?.some(
@@ -291,6 +311,9 @@
       toast.error(
         `Failed to update interest: ${error.message || "Unknown error"}. Please try again.`
       );
+    } finally {
+      togglingSites.delete(siteId);
+      togglingSites = togglingSites;
     }
   }
 
@@ -323,6 +346,7 @@
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submittingSite) return;
 
     const name = String(newSite.name || "").trim();
     const depth = Number(newSite.depth);
@@ -354,6 +378,7 @@
       return;
     }
 
+    submittingSite = true;
     try {
       await sitesApi.createSite({
         name,
@@ -367,6 +392,8 @@
       toast.success("Site added successfully!");
     } catch (error) {
       toast.error(`Failed to add site: ${error.message || "Unknown error"}`);
+    } finally {
+      submittingSite = false;
     }
   }
 </script>
@@ -418,7 +445,9 @@
           placeholder="Longitude"
           required
         />
-        <button type="submit" class="submit-button">Add Site</button>
+        <button type="submit" class="submit-button" disabled={submittingSite}>
+          {submittingSite ? "Adding..." : "Add Site"}
+        </button>
       </form>
     {/if}
 
@@ -445,6 +474,7 @@
                 class="interest-button"
                 class:interested={site.isInterested}
                 onclick={() => toggleInterest(site.siteId)}
+                disabled={togglingSites.has(site.siteId)}
                 aria-label={site.isInterested
                   ? `Remove from my interested sites for ${site.name}`
                   : `Add ${site.name} to my interested sites`}
@@ -506,6 +536,7 @@
                   class="interest-button"
                   class:interested={site.isInterested}
                   onclick={() => toggleInterest(site.siteId)}
+                  disabled={togglingSites.has(site.siteId)}
                   aria-label={site.isInterested
                     ? `Remove from my interested sites for ${site.name}`
                     : `Add ${site.name} to my interested sites`}
@@ -596,6 +627,11 @@
     font-weight: 600;
   }
 
+  .submit-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .unknown-location-header {
     grid-column: 1 / -1;
     margin: var(--spacing-xl) 0 var(--spacing-md) 0;
@@ -667,6 +703,12 @@
   .interest-button:hover {
     color: #ffd700;
     transform: scale(1.1);
+  }
+
+  .interest-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
   }
 
   .interest-button.interested {

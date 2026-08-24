@@ -33,15 +33,20 @@
   let currentWeekStart = $state(new Date());
   let pollIntervalId = $state(null);
   let pollInFlight = $state(false);
+  let pendingToggleCount = $state(0);
+  let loadRequestId = 0;
 
   const POLL_INTERVAL_MS = 30_000;
 
-  // Use viewport store for mobile detection
+  // Only snap back to the current week when switching INTO mobile layout,
+  // not on every resize while already mobile (e.g. rotating the device),
+  // which used to silently discard the user's week navigation.
+  let wasMobile = $state(undefined);
   $effect(() => {
-    if ($viewport.isMobile) {
-      const today = new Date();
-      currentWeekStart = getWeekStart(today);
+    if ($viewport.isMobile && !wasMobile) {
+      currentWeekStart = getWeekStart(new Date());
     }
+    wasMobile = $viewport.isMobile;
   });
 
   $effect(() => {
@@ -163,7 +168,7 @@
   }
 
   async function pollForUpdates() {
-    if (!$user || pollInFlight) {
+    if (!$user || pollInFlight || pendingToggleCount > 0) {
       return;
     }
 
@@ -192,14 +197,27 @@
       return;
     }
 
+    // Guards against rapid prev/next month clicks: if a newer loadData()
+    // call has started by the time this one's fetch resolves, its result
+    // is stale and must not overwrite the newer state.
+    const requestId = ++loadRequestId;
     const fresh = await fetchCalendarPayload();
+    if (requestId !== loadRequestId) return;
     applyCalendarState(fresh.availabilityData, fresh.myDates);
   }
+
+  let togglingDates = $state(new Set());
 
   async function handleDayClick(date) {
     if (!date) return;
 
     const dateStr = formatDateISO(date);
+
+    // Prevent duplicate in-flight requests from rapid double-clicks on the same day
+    if (togglingDates.has(dateStr)) return;
+    togglingDates.add(dateStr);
+    togglingDates = togglingDates;
+    pendingToggleCount++;
 
     // Optimistic update: Update UI immediately
     const wasMyDay = myDates.has(dateStr);
@@ -323,6 +341,10 @@
       toast.error(
         `Failed to mark availability: ${error.message || "Unknown error"}. Please try again.`
       );
+    } finally {
+      togglingDates.delete(dateStr);
+      togglingDates = togglingDates;
+      pendingToggleCount--;
     }
   }
 

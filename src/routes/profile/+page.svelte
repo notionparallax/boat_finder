@@ -6,7 +6,6 @@
   import { invalidateCalendarCache } from "$lib/stores/dataCache.js";
   import { toast } from "$lib/stores/toast";
   import { logger } from "$lib/utils/logger";
-  import { onMount } from "svelte";
 
   let profile = $state({
     firstName: "",
@@ -74,7 +73,10 @@
     return null;
   }
 
-  onMount(() => {
+  // Re-syncs whenever $user changes, not just at mount - covers the case
+  // where auth is still rehydrating when this page first loads and $user
+  // is briefly null, which used to leave the form permanently blank.
+  $effect(() => {
     if ($user) {
       profile = {
         firstName: $user.firstName || "",

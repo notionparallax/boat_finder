@@ -20,7 +20,6 @@ credentials.json
 
 # Node modules
 /node_modules/
-api/node_modules/
 functions/node_modules/
 
 # SvelteKit

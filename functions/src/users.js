@@ -195,7 +195,7 @@ exports.getMe = onRequest({ region: "australia-southeast1" }, async (req, res) =
         return res.status(200).json({ success: true, data: userData });
     } catch (error) {
         console.error("Error in getMe:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
 
@@ -272,6 +272,6 @@ exports.updateProfile = onRequest({ region: "australia-southeast1" }, async (req
         return res.status(200).json({ success: true, data: userData });
     } catch (error) {
         console.error("Error in updateProfile:", error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });

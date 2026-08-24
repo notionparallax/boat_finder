@@ -27,32 +27,36 @@ service cloud.firestore {
       ]);
     }
     
-    // Users collection - users can read/write their own profile
+    // Users collection - the app reads/writes user data exclusively through
+    // the Cloud Functions API (Admin SDK, bypasses these rules). These rules
+    // only govern direct client-SDK access, which the app never uses - so
+    // reads are locked to the owner's own document to prevent any signed-in
+    // user from harvesting every other user's email/phone/PII directly.
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow read: if isOwner(userId);
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) && 
+      allow update: if isOwner(userId) &&
                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isOperator', 'userId']);
     }
-    
-    // Availability collection - users can manage their own availability
+
+    // Availability collection - users can manage and read only their own availability
     match /availability/{docId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
-    
+
     // Dive sites - anyone can read, operators can create/update, creators can delete
     match /diveSites/{siteId} {
       allow read: if isSignedIn();
       allow create, update: if isOperator();
-      allow delete: if isSignedIn() && 
+      allow delete: if isSignedIn() &&
                        resource.data.createdBy == request.auth.uid;
     }
-    
-    // Site interest - users can manage their own interests
+
+    // Site interest - users can manage and read only their own interests
     match /siteInterest/{docId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
