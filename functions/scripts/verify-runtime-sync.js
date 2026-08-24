@@ -6,6 +6,8 @@ const rootDir = path.resolve(__dirname, "..");
 const filePairs = [
   ["src/users.js", "lib/users.js"],
   ["src/sites.js", "lib/sites.js"],
+  ["src/availability.js", "lib/availability.js"],
+  ["src/scheduled.js", "lib/scheduled.js"],
 ];
 
 function readNormalized(relativePath) {

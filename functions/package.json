@@ -4,7 +4,7 @@
     "genkit:start": "genkit start -- tsx --watch src/genkit-sample.ts",
     "lint": "eslint --ext .js,.ts .",
     "verify:runtime-sync": "node scripts/verify-runtime-sync.js",
-    "build": "tsc",
+    "build": "tsc && node scripts/copy-runtime-js.js",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
