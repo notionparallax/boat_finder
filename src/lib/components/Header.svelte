@@ -237,6 +237,7 @@
     border: 2px solid var(--text-on-background);
   }
 
+  /* Keep in sync with MOBILE_BREAKPOINT in src/lib/stores/viewport.js */
   @media (max-width: 768px) {
     .header-content {
       flex-direction: row;
@@ -280,7 +281,7 @@
 
     .mobile-nav-item {
       padding: var(--spacing-md);
-      color: var(--text-primary);
+      color: var(--text-on-calendar);
       text-decoration: none;
       border-bottom: 1px solid var(--border-color);
       min-height: 48px;
@@ -314,7 +315,7 @@
       padding: var(--spacing-md);
       margin-top: auto;
       border-top: 1px solid var(--border-color);
-      color: var(--text-primary);
+      color: var(--text-on-calendar);
     }
 
     .profile-photo {

@@ -1,27 +1,50 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { getFirestore } = require("firebase-admin/firestore");
 const admin = require("firebase-admin");
+const { verifyAuth, verifyOperator } = require("./authHelpers");
 
 const db = getFirestore();
+
+// The app only ever requests up to ~3 months at a time (see
+// getCalendarDateRange in src/lib/utils/dateHelpers.js); this caps how large
+// a range a caller can request so a scripted client can't force repeated
+// full-collection-scanning queries against Firestore.
+const MAX_DATE_RANGE_DAYS = 366;
+
+function validateDateRange(startDate, endDate) {
+    if (!startDate || !endDate) {
+        return { error: "startDate and endDate are required" };
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        return { error: "startDate and endDate must be valid dates" };
+    }
+
+    const spanDays = (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000);
+    if (spanDays < 0 || spanDays > MAX_DATE_RANGE_DAYS) {
+        return { error: `date range must be between 0 and ${MAX_DATE_RANGE_DAYS} days` };
+    }
+
+    return { value: { startDate, endDate } };
+}
 
 /**
  * Get calendar view of all divers' availability for a date range
  */
-exports.getCalendar = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.getCalendar = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
 
-        const token = authHeader.split("Bearer ")[1];
-        await admin.auth().verifyIdToken(token);
-
-        const { startDate, endDate } = req.query;
-
-        if (!startDate || !endDate) {
-            return res.status(400).json({ error: "startDate and endDate are required" });
+        const range = validateDateRange(req.query.startDate, req.query.endDate);
+        if (range.error) {
+            return res.status(400).json({ error: range.error });
         }
+        const { startDate, endDate } = range.value;
 
         // Get all availability records in date range
         const availabilitySnapshot = await db.collection("availability")
@@ -73,24 +96,14 @@ exports.getCalendar = onRequest({ region: "australia-southeast1" }, async (req, 
 /**
  * Get detailed list of divers available on a specific date (operators only)
  */
-exports.getDayDetails = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.getDayDetails = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyOperator(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.status === 403 ? "Operators only" : auth.error });
         }
-
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
 
         const date = req.query.date || req.params.date;
-
-        // Check if user is operator
-        const userDoc = await db.collection("users").doc(userId).get();
-        if (!userDoc.exists || !userDoc.data().isOperator) {
-            return res.status(403).json({ error: "Operators only" });
-        }
 
         // Get all availability for this date
         const availabilitySnapshot = await db.collection("availability")
@@ -132,16 +145,13 @@ exports.getDayDetails = onRequest({ region: "australia-southeast1" }, async (req
 /**
  * Toggle availability for a specific date
  */
-exports.toggleAvailability = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.toggleAvailability = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
+        const userId = auth.uid;
 
         const { date } = req.body;
 
@@ -196,22 +206,19 @@ exports.toggleAvailability = onRequest({ region: "australia-southeast1" }, async
 /**
  * Get the current user's availability dates
  */
-exports.getMyDates = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.getMyDates = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
+        const userId = auth.uid;
 
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
-
-        const { startDate, endDate } = req.query;
-
-        if (!startDate || !endDate) {
-            return res.status(400).json({ error: "startDate and endDate are required" });
+        const range = validateDateRange(req.query.startDate, req.query.endDate);
+        if (range.error) {
+            return res.status(400).json({ error: range.error });
         }
+        const { startDate, endDate } = range.value;
 
         // Get user's availability
         const snapshot = await db.collection("availability")

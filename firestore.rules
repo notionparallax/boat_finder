@@ -19,22 +19,37 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isOperator == true;
     }
 
-    // Helper function to check if data is publicly visible user info
-    function isPublicUserData() {
+    // Helper function to check the user doc only contains fields the app
+    // actually writes, and that isOperator can only ever be created as false
+    // - a client-SDK create can never self-grant operator status.
+    function isValidNewUser() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+        'userId', 'email', 'firstName', 'lastName', 'phone', 'photoURL',
+        'certLevel', 'maxDepth', 'isOperator', 'operatorNotificationThreshold',
+        'createdAt', 'updatedAt'
+      ]) && data.userId == userId && data.isOperator == false;
+    }
+
+    // Helper function to restrict dive site writes to the fields the app
+    // actually writes, so a direct client-SDK write can't inject extra data
+    // or spoof createdBy.
+    function isValidSite() {
       return request.resource.data.keys().hasOnly([
-        'userId', 'firstName', 'lastName', 'photoURL', 'certLevel', 
-        'maxDepth', 'isOperator', 'createdAt', 'updatedAt'
+        'name', 'nameLower', 'depth', 'latitude', 'longitude',
+        'createdBy', 'createdAt', 'updatedAt'
       ]);
     }
-    
+
     // Users collection - the app reads/writes user data exclusively through
     // the Cloud Functions API (Admin SDK, bypasses these rules). These rules
     // only govern direct client-SDK access, which the app never uses - so
     // reads are locked to the owner's own document to prevent any signed-in
-    // user from harvesting every other user's email/phone/PII directly.
+    // user from harvesting every other user's email/phone/PII directly, and
+    // create/update can't be used to self-grant operator status.
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow create: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidNewUser();
       allow update: if isOwner(userId) &&
                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isOperator', 'userId']);
     }
@@ -49,7 +64,7 @@ service cloud.firestore {
     // Dive sites - anyone can read, operators can create/update, creators can delete
     match /diveSites/{siteId} {
       allow read: if isSignedIn();
-      allow create, update: if isOperator();
+      allow create, update: if isOperator() && isValidSite();
       allow delete: if isSignedIn() &&
                        resource.data.createdBy == request.auth.uid;
     }

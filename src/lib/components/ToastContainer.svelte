@@ -46,6 +46,7 @@
     background: #3b82f6;
   }
 
+  /* Keep in sync with MOBILE_BREAKPOINT in src/lib/stores/viewport.js */
   @media (max-width: 768px) {
     .toast-container {
       left: var(--spacing-md);

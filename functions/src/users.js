@@ -1,11 +1,11 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { getFirestore } = require("firebase-admin/firestore");
 const admin = require("firebase-admin");
+const { verifyAuth } = require("./authHelpers");
+const { NAME_REGEX, normalizeAustralianMobile } = require("./validation");
 
 // Initialize Firestore
 const db = getFirestore();
-
-const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ'\-\s]+$/;
 
 function validationError(res, message) {
     return res.status(400).json({ success: false, error: message });
@@ -28,29 +28,6 @@ function validateName(fieldName, value) {
         return { error: `${fieldName} contains invalid characters` };
     }
     return { value: trimmed };
-}
-
-function normalizeAustralianMobile(input) {
-    const raw = sanitizeString(input);
-    if (!raw) {
-        return { error: "phone is required" };
-    }
-
-    const normalized = raw.replace(/[\s()-]/g, "");
-
-    if (/^04\d{8}$/.test(normalized)) {
-        return { value: normalized };
-    }
-
-    if (/^\+614\d{8}$/.test(normalized)) {
-        return { value: `0${normalized.slice(3)}` };
-    }
-
-    if (/^614\d{8}$/.test(normalized)) {
-        return { value: `0${normalized.slice(2)}` };
-    }
-
-    return { error: "phone must be a valid Australian mobile number (e.g. 04XXXXXXXX)" };
 }
 
 function validateCertLevel(value) {
@@ -147,27 +124,31 @@ function validateProfilePayload(body, isOperator) {
 /**
  * Get the current user's profile
  */
-exports.getMe = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.getMe = onRequest(async (req, res) => {
     try {
-        // Verify Firebase Auth token
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
+        const userId = auth.uid;
+        const decodedToken = auth.decodedToken;
 
         // Get user from Firestore
         const userDoc = await db.collection("users").doc(userId).get();
 
         if (!userDoc.exists) {
-            // Create new user on first login
+            // Create new user on first login. The OAuth display name is
+            // attacker-controlled, so it's run through the same NAME_REGEX
+            // used for manual profile edits rather than trusted as-is -
+            // falling back to blank (which triggers the "complete your
+            // profile" prompt) instead of storing something that could
+            // later be injected unescaped into operator emails.
             const displayName = decodedToken.name || decodedToken.email?.split("@")[0] || "";
             const nameParts = displayName.split(" ");
-            const firstName = nameParts[0] || "";
-            const lastName = nameParts.slice(1).join(" ") || "";
+            const rawFirstName = nameParts[0] || "";
+            const rawLastName = nameParts.slice(1).join(" ") || "";
+            const firstName = NAME_REGEX.test(rawFirstName) ? rawFirstName : "";
+            const lastName = NAME_REGEX.test(rawLastName) ? rawLastName : "";
 
             const newUser = {
                 userId: userId,
@@ -202,17 +183,14 @@ exports.getMe = onRequest({ region: "australia-southeast1" }, async (req, res) =
 /**
  * Update the current user's profile
  */
-exports.updateProfile = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.updateProfile = onRequest(async (req, res) => {
     try {
-        // Verify Firebase Auth token
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
+        const userId = auth.uid;
+        const decodedToken = auth.decodedToken;
 
         const body = req.body || {};
 

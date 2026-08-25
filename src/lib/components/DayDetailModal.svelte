@@ -299,6 +299,7 @@
     display: block;
   }
 
+  /* Keep in sync with MOBILE_BREAKPOINT in src/lib/stores/viewport.js */
   @media (max-width: 768px) {
     .depth {
       display: inline;
@@ -352,6 +353,7 @@
     background-color: rgba(0, 102, 204, 0.1);
   }
 
+  /* Keep in sync with MOBILE_BREAKPOINT in src/lib/stores/viewport.js */
   @media (max-width: 768px) {
     .phone-link {
       padding: var(--spacing-md);
@@ -364,6 +366,7 @@
     }
   }
 
+  /* Keep in sync with MOBILE_BREAKPOINT in src/lib/stores/viewport.js */
   @media (max-width: 768px) {
     .list-header,
     .diver-row {

@@ -7,6 +7,20 @@
   import { toast } from "$lib/stores/toast";
   import { logger } from "$lib/utils/logger";
 
+  // Kept in sync with functions/src/validation.js by
+  // functions/src/validation.sync.test.js, which fails the test suite if
+  // these ever drift from the server-side source of truth. They can't be a
+  // single shared import: Rollup's production build can't reliably do
+  // CJS/ESM interop for a plain local .js file required by functions/ and
+  // imported by the client at once.
+  const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ'\-\s]+$/;
+
+  function normalizePhoneForValidation(phone) {
+    return String(phone || "")
+      .trim()
+      .replace(/[\s()-]/g, "");
+  }
+
   let profile = $state({
     firstName: "",
     lastName: "",
@@ -17,14 +31,6 @@
   });
   let saving = $state(false);
   let depthTouched = $state(false);
-
-  const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ'\-\s]+$/;
-
-  function normalizePhoneForValidation(phone) {
-    return String(phone || "")
-      .trim()
-      .replace(/[\s()-]/g, "");
-  }
 
   function validateProfileInput() {
     const firstName = String(profile.firstName || "").trim();
@@ -122,7 +128,6 @@
 
 <svelte:head>
   <title>Profile</title>
-  <!-- - Boat Finder -->
 </svelte:head>
 
 {#if $user}

@@ -64,9 +64,7 @@
 {:else if $user}
   <Header user={$user} />
   <main id="main-content" class="container full-screen">
-    <div class="calendar-header-section">
-      <!-- <h1>Dive Availability Calendar</h1> -->
-    </div>
+    <div class="calendar-header-section"></div>
     <Calendar />
     <div class="explainer">
       <h2>What the hell is going on here?</h2>
@@ -123,7 +121,6 @@
     </video>
     <div class="login-card">
       <h1>Boat Finder</h1>
-      <!-- <p>Sydney Tech Diving Availability Coordinator</p> -->
       <div class="login-buttons">
         <button onclick={signInWithGoogle} class="login-button">
           <span>Sign in with Google</span>
@@ -154,11 +151,6 @@
     margin-bottom: var(--spacing-md);
   }
 
-  /* h1 {
-    font-size: 2rem;
-    margin-bottom: var(--spacing-sm);
-  } */
-
   .login-container {
     display: flex;
     align-items: center;
@@ -185,7 +177,7 @@
   .login-card {
     background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(10px);
-    color: var(--text-primary);
+    color: var(--text-on-calendar);
     padding: var(--spacing-xl);
     border-radius: var(--radius-lg);
     text-align: center;
@@ -197,12 +189,12 @@
   }
 
   .login-card h1 {
-    color: var(--text-primary);
+    color: var(--text-on-calendar);
     margin-bottom: var(--spacing-md);
   }
 
   .login-card p {
-    color: var(--text-primary);
+    color: var(--text-on-calendar);
     margin-bottom: var(--spacing-xl);
   }
 

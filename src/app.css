@@ -22,6 +22,10 @@
 	--border-standard: 1px solid rgba(10, 30, 60, 0.08);
 	--border-emphasis: 1px solid rgba(10, 30, 60, 0.15);
 	--border-strong: 2px solid rgba(10, 30, 60, 0.25);
+	--border-color: rgba(10, 30, 60, 0.08); /* same tint as --border-standard, for use with an explicit width/style */
+
+	/* Hover background for light-surface interactive elements */
+	--bg-hover: rgba(10, 30, 60, 0.05);
 	
 	/* Border radius */
 	--radius-sm: 4px;

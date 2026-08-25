@@ -1,8 +1,13 @@
 import { initializeApp } from "firebase-admin/app";
 import { onRequest } from "firebase-functions/v2/https";
+import { setGlobalOptions } from "firebase-functions/v2";
 
 // Initialize Firebase Admin
 initializeApp();
+
+// Set once here (the entry point) rather than repeating { region: ... } on
+// every onRequest() call across every handler file.
+setGlobalOptions({ region: "australia-southeast1" });
 
 // Export all functions
 const users = require("./users");
@@ -22,7 +27,8 @@ exports.api = onRequest({
 
   // Route to appropriate handler
   if (path[0] === "test-digest") {
-    // Test digest endpoint: GET /api/test-digest?email=YOUR_EMAIL&threshold=1
+    // Test digest endpoint: GET /api/test-digest?threshold=1 (operators only,
+    // always sent to the calling operator's own verified email)
     return scheduled.handleTestDigest(req, res);
   } else if (path[0] === "users") {
     if (path[1] === "me") {
@@ -74,4 +80,3 @@ exports.api = onRequest({
 
 // Export scheduled functions
 exports.dailyDigest = scheduled.dailyDigest;
-exports.testDigest = scheduled.testDigest;

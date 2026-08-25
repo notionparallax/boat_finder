@@ -1,13 +1,11 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
-const { onRequest } = require("firebase-functions/v2/https");
 const { getFirestore } = require("firebase-admin/firestore");
-const { setGlobalOptions } = require("firebase-functions/v2");
 const { defineSecret } = require("firebase-functions/params");
 const sgMail = require("@sendgrid/mail");
-const admin = require("firebase-admin");
+const { verifyOperator } = require("./authHelpers");
 
-// Set default region for all functions
-setGlobalOptions({ region: "australia-southeast1" });
+// Region is set globally in index.ts (the entry point), before this module
+// is required.
 
 // Define secrets for SendGrid
 const sendgridApiKey = defineSecret("SENDGRID_API_KEY");
@@ -25,31 +23,6 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
-}
-
-/**
- * Verify the request carries a valid Firebase ID token for an operator account
- */
-async function requireOperator(req) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return { error: "Unauthorized", status: 401 };
-    }
-
-    const token = authHeader.split("Bearer ")[1];
-    let decodedToken;
-    try {
-        decodedToken = await admin.auth().verifyIdToken(token);
-    } catch (error) {
-        return { error: "Unauthorized", status: 401 };
-    }
-
-    const userDoc = await db.collection("users").doc(decodedToken.uid).get();
-    if (!userDoc.exists || !userDoc.data().isOperator) {
-        return { error: "Forbidden", status: 403 };
-    }
-
-    return { uid: decodedToken.uid };
 }
 
 /**
@@ -228,7 +201,7 @@ async function sendDigestEmails(testEmail = null, testThreshold = null) {
         `;
         allDatesOverThreshold.forEach((dateInfo) => {
             const diverList = dateInfo.divers
-                .map((d) => `${d.firstName} ${d.lastName} (${d.maxDepth}m)`)
+                .map((d) => `${escapeHtml(d.firstName)} ${escapeHtml(d.lastName)} (${d.maxDepth}m)`)
                 .join(", ");
             emailHtml += `
                 <li style="margin: 5px 0; font-size: 14px;">
@@ -302,63 +275,21 @@ exports.dailyDigest = onSchedule(
 );
 
 /**
- * Test endpoint to manually trigger digest with custom email/threshold
- * GET /testDigest?email=YOUR_EMAIL&threshold=1
+ * Test endpoint to manually trigger a digest, sent only to the calling
+ * operator's own verified email (never an arbitrary address - this used to
+ * accept a `?email=` query param, which let any operator use the app's
+ * SendGrid identity to email a real digest to anyone they chose).
+ * GET /api/test-digest?threshold=1
  */
-exports.testDigest = onRequest(
-    {
-        secrets: [sendgridApiKey, emailFrom],
-        memory: "256MiB",
-        timeoutSeconds: 300,
-    },
-    async (req, res) => {
-        try {
-            const auth = await requireOperator(req);
-            if (auth.error) {
-                return res.status(auth.status).json({ error: auth.error });
-            }
-
-            const testEmail = req.query.email;
-            const testThreshold = parseInt(req.query.threshold) || 1;
-
-            if (!testEmail) {
-                return res.status(400).json({
-                    error: "Missing email parameter. Usage: ?email=YOUR_EMAIL&threshold=1"
-                });
-            }
-
-            const result = await sendDigestEmails(testEmail, testThreshold);
-            return res.status(200).json(result);
-        } catch (error) {
-            console.error("Error in test digest:", error);
-            return res.status(500).json({
-                success: false,
-                error: "Internal server error"
-            });
-        }
-    }
-);
-
-/**
- * Handler for test digest (used by API endpoint without Cloud Function wrapper)
- */
-exports.handleTestDigest = async (req, res) => {
+async function handleTestDigest(req, res) {
     try {
-        const auth = await requireOperator(req);
+        const auth = await verifyOperator(req);
         if (auth.error) {
             return res.status(auth.status).json({ error: auth.error });
         }
 
-        const testEmail = req.query.email;
         const testThreshold = parseInt(req.query.threshold) || 1;
-
-        if (!testEmail) {
-            return res.status(400).json({
-                error: "Missing email parameter. Usage: /api/test-digest?email=YOUR_EMAIL&threshold=1"
-            });
-        }
-
-        const result = await sendDigestEmails(testEmail, testThreshold);
+        const result = await sendDigestEmails(auth.decodedToken.email, testThreshold);
         return res.status(200).json(result);
     } catch (error) {
         console.error("Error in test digest:", error);
@@ -367,4 +298,6 @@ exports.handleTestDigest = async (req, res) => {
             error: "Internal server error"
         });
     }
-};
+}
+
+exports.handleTestDigest = handleTestDigest;

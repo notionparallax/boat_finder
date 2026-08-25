@@ -14,6 +14,14 @@
   import { MapPin, Trash2 } from "lucide-svelte";
   import { onMount } from "svelte";
 
+  // Kept in sync with functions/src/validation.js by
+  // functions/src/validation.sync.test.js, which fails the test suite if
+  // this ever drifts from the server-side source of truth. It can't be a
+  // single shared import: Rollup's production build can't reliably do
+  // CJS/ESM interop for a plain local .js file required by functions/ and
+  // imported by the client at once.
+  const SITE_NAME_REGEX = /^[A-Za-z0-9À-ÖØ-öø-ÿ'&(),./+\-\s]+$/;
+
   let sites = $state([]);
   let showAddForm = $state(false);
   let newSite = $state({ name: "", depth: "", latitude: "", longitude: "" });
@@ -24,8 +32,6 @@
   let togglingSites = $state(new Set());
   let submittingSite = $state(false);
 
-  const SITE_NAME_REGEX = /^[A-Za-z0-9À-ÖØ-öø-ÿ'&(),./+\-\s]+$/;
-
   function escapeHtml(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -33,6 +39,35 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function buildPopupHtml(site, isInterested) {
+    return `
+      <div style="min-width: 200px;">
+        <strong style="font-size: 1.1em;">${escapeHtml(site.name)}</strong><br>
+        <strong>Depth:</strong> ${site.depth}m<br>
+        ${site.type ? `<strong>Type:</strong> ${escapeHtml(site.type)}<br>` : ""}
+        ${site.description ? `<strong>Description:</strong> ${escapeHtml(site.description)}<br>` : ""}
+        ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong><br>` : "<em>No divers interested yet</em><br>"}
+        <button
+          onclick="window.toggleSiteInterest('${site.siteId}')"
+          aria-label="${isInterested ? `Remove interest in ${escapeHtml(site.name)}` : `Mark interest in ${escapeHtml(site.name)}`}"
+          style="
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: ${isInterested ? "#dc2626" : "#4A9B9B"};
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+          "
+        >
+          ${isInterested ? "Remove Interest" : "I'm Interested!"}
+        </button>
+      </div>
+    `;
   }
 
   // Filter sites based on map bounds
@@ -96,7 +131,8 @@
         // Set initial bounds
         mapBounds = map.getBounds();
       } catch (error) {
-        console.error("Failed to initialize map:", error);
+        logger.error("Failed to initialize map:", error);
+        toast.error("Failed to load the map. Try refreshing the page.");
       }
     };
 
@@ -136,7 +172,8 @@
         updateMapMarkers();
       }
     } catch (error) {
-      console.error("Failed to load sites:", error);
+      logger.error("Failed to load sites:", error);
+      toast.error("Failed to load dive sites. Try refreshing the page.");
     }
   }
 
@@ -162,34 +199,7 @@
             direction: "top",
             offset: [0, -20],
           })
-          .bindPopup(
-            `
-            <div style="min-width: 200px;">
-              <strong style="font-size: 1.1em;">${escapeHtml(site.name)}</strong><br>
-              <strong>Depth:</strong> ${site.depth}m<br>
-              ${site.type ? `<strong>Type:</strong> ${escapeHtml(site.type)}<br>` : ""}
-              ${site.description ? `<strong>Description:</strong> ${escapeHtml(site.description)}<br>` : ""}
-              ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong><br>` : "<em>No divers interested yet</em><br>"}
-              <button
-                onclick="window.toggleSiteInterest('${site.siteId}')"
-                aria-label="${isInterested ? `Remove interest in ${escapeHtml(site.name)}` : `Mark interest in ${escapeHtml(site.name)}`}"
-                style="
-                  margin-top: 8px;
-                  padding: 6px 12px;
-                  background: ${isInterested ? "#dc2626" : "#4A9B9B"};
-                  color: white;
-                  border: none;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  font-weight: 600;
-                  width: 100%;
-                "
-              >
-                ${isInterested ? "Remove Interest" : "I'm Interested!"}
-              </button>
-            </div>
-          `
-          )
+          .bindPopup(buildPopupHtml(site, isInterested))
           .addTo(map);
         markers[site.siteId] = marker;
       }
@@ -266,34 +276,7 @@
         (d) => d.userId === $user?.userId
       );
 
-      marker.setPopupContent(
-        `
-        <div style="min-width: 200px;">
-          <strong style="font-size: 1.1em;">${site.name}</strong><br>
-          <strong>Depth:</strong> ${site.depth}m<br>
-          ${site.type ? `<strong>Type:</strong> ${site.type}<br>` : ""}
-          ${site.description ? `<strong>Description:</strong> ${site.description}<br>` : ""}
-          ${site.interestedDivers?.length > 0 ? `<strong>${site.interestedDivers.length} diver(s) interested</strong><br>` : "<em>No divers interested yet</em><br>"}
-          <button 
-            onclick="window.toggleSiteInterest('${site.siteId}')"
-            aria-label="${isInterested ? `Remove interest in ${site.name}` : `Mark interest in ${site.name}`}" 
-            style="
-              margin-top: 8px;
-              padding: 6px 12px;
-              background: ${isInterested ? "#dc2626" : "#4A9B9B"};
-              color: white;
-              border: none;
-              border-radius: 4px;
-              cursor: pointer;
-              font-weight: 600;
-              width: 100%;
-            "
-          >
-            ${isInterested ? "Remove Interest" : "I'm Interested!"}
-          </button>
-        </div>
-      `
-      );
+      marker.setPopupContent(buildPopupHtml(site, isInterested));
     }
 
     // Then sync with backend
@@ -399,7 +382,6 @@
 </script>
 
 <svelte:head>
-  <!-- - Boat Finder -->
   <title>Dive Sites</title>
   <link
     rel="stylesheet"

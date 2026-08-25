@@ -1,10 +1,10 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { getFirestore } = require("firebase-admin/firestore");
 const admin = require("firebase-admin");
+const { verifyAuth } = require("./authHelpers");
+const { SITE_NAME_REGEX } = require("./validation");
 
 const db = getFirestore();
-
-const SITE_NAME_REGEX = /^[A-Za-z0-9À-ÖØ-öø-ÿ'&(),./+\-\s]+$/;
 
 function validationError(res, message) {
     return res.status(400).json({ success: false, error: message });
@@ -97,16 +97,13 @@ function validateCreateSitePayload(body) {
 /**
  * Get all dive sites with user's interest flags
  */
-exports.getAllSites = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.getAllSites = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
+        const userId = auth.uid;
 
         // Get all sites
         const sitesSnapshot = await db.collection("diveSites")
@@ -139,14 +136,12 @@ exports.getAllSites = onRequest({ region: "australia-southeast1" }, async (req, 
 /**
  * Get a single dive site by ID
  */
-exports.getSite = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.getSite = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        await admin.auth().verifyIdToken(authHeader.split("Bearer ")[1]);
 
         const validatedSiteId = validateSiteId(req.query.siteId || req.params.siteId);
         if (validatedSiteId.error) {
@@ -174,14 +169,12 @@ exports.getSite = onRequest({ region: "australia-southeast1" }, async (req, res)
 /**
  * Get all divers interested in a specific site
  */
-exports.getSiteDivers = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.getSiteDivers = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        await admin.auth().verifyIdToken(authHeader.split("Bearer ")[1]);
 
         const validatedSiteId = validateSiteId(req.query.siteId || req.params.siteId);
         if (validatedSiteId.error) {
@@ -228,16 +221,13 @@ exports.getSiteDivers = onRequest({ region: "australia-southeast1" }, async (req
 /**
  * Create a new dive site
  */
-exports.createSite = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.createSite = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
+        const userId = auth.uid;
 
         const validatedPayload = validateCreateSitePayload(req.body || {});
         if (validatedPayload.error) {
@@ -280,16 +270,13 @@ exports.createSite = onRequest({ region: "australia-southeast1" }, async (req, r
 /**
  * Delete a dive site (only by creator)
  */
-exports.deleteSite = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.deleteSite = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
+        const userId = auth.uid;
 
         const validatedSiteId = validateSiteId(req.body?.siteId || req.params.siteId);
         if (validatedSiteId.error) {
@@ -334,16 +321,13 @@ exports.deleteSite = onRequest({ region: "australia-southeast1" }, async (req, r
 /**
  * Toggle user's interest in a dive site
  */
-exports.toggleSiteInterest = onRequest({ region: "australia-southeast1" }, async (req, res) => {
+exports.toggleSiteInterest = onRequest(async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+        const auth = await verifyAuth(req);
+        if (auth.error) {
+            return res.status(auth.status).json({ error: auth.error });
         }
-
-        const token = authHeader.split("Bearer ")[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
+        const userId = auth.uid;
 
         const validatedSiteId = validateSiteId(req.body?.siteId || req.params.siteId);
         if (validatedSiteId.error) {

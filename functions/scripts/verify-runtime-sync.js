@@ -1,14 +1,10 @@
 const fs = require("fs");
 const path = require("path");
+const { RUNTIME_JS_FILES } = require("./copy-runtime-js");
 
 const rootDir = path.resolve(__dirname, "..");
 
-const filePairs = [
-  ["src/users.js", "lib/users.js"],
-  ["src/sites.js", "lib/sites.js"],
-  ["src/availability.js", "lib/availability.js"],
-  ["src/scheduled.js", "lib/scheduled.js"],
-];
+const filePairs = RUNTIME_JS_FILES.map((file) => [`src/${file}`, `lib/${file}`]);
 
 function readNormalized(relativePath) {
   const fullPath = path.join(rootDir, relativePath);

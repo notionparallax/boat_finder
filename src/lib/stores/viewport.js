@@ -5,6 +5,10 @@ import { writable } from 'svelte/store';
  * Provides reactive window dimensions and mobile detection
  */
 
+// CSS can't reference a JS constant in a @media query, so this value is
+// duplicated in `@media (max-width: 768px)` rules across several
+// components (Calendar.svelte, Header.svelte, DayDetailModal.svelte,
+// ToastContainer.svelte) - keep them in sync if this ever changes.
 const MOBILE_BREAKPOINT = 768;
 
 function createViewportStore() {
